@@ -44,7 +44,7 @@ local Theme = {
 	TopBar = Color3.fromRGB(18, 18, 22),         -- Neutral 200 (Painel Superior)
 	CardBg = Color3.fromRGB(24, 24, 30),         -- Neutral 300 (Componentes)
 	CardHover = Color3.fromRGB(32, 32, 40),      -- Neutral 400 (Foco)
-	Accent = Color3.fromRGB(225, 40, 58) ,       -- Ruby Red Premium
+	Accent = Color3.fromRGB(225, 40, 58),        -- Ruby Red Premium
 	AccentHover = Color3.fromRGB(255, 65, 85),   -- Brilho Ativo
 	AccentMuted = Color3.fromRGB(50, 18, 22),    -- Fundo de Foco Sutil
 	TextColor = Color3.fromRGB(245, 245, 247),   -- Branco Apple
@@ -119,6 +119,7 @@ local function EnsureNotificationHolder(parentGui)
 	end
 end
 
+-- [[ METODO DE NOTIFICACAO ACESSIVEL VIA LIBRARY ]]
 function Muzysh:Notify(title, desc, duration)
 	duration = duration or 4
 	EnsureNotificationHolder(self.ScreenGui)
@@ -201,7 +202,6 @@ function Muzysh.Init()
 		self.ScreenGui.Parent = PlayerGui
 	end
 
-	-- Suporte a Ergonomia de Dispositivos Móveis e Safe Zones
 	local inset = GuiService:GetGuiInset()
 	
 	self.MainFrame = Instance.new("Frame")
@@ -216,7 +216,6 @@ function Muzysh.Init()
 	corner.CornerRadius = Theme.CornerRadius
 	corner.Parent = self.MainFrame
 
-	-- Stroke Gradiente Premium para profundidade visual
 	local stroke = Instance.new("UIStroke")
 	stroke.Color = Theme.Stroke
 	stroke.Thickness = 1
@@ -230,7 +229,6 @@ function Muzysh.Init()
 	strokeGrad.Rotation = 45
 	strokeGrad.Parent = stroke
 
-	-- Responsividade Dinâmica Avançada (Mobile e PC)
 	local uiScale = Instance.new("UIScale")
 	uiScale.Parent = self.MainFrame
 	
@@ -245,7 +243,6 @@ function Muzysh.Init()
 	AdaptLayout()
 	self.Janitor:Add(workspace.CurrentCamera:GetPropertyChangedSignal("ViewportSize"):Connect(AdaptLayout))
 
-	-- TopBar
 	self.TopBar = Instance.new("Frame")
 	self.TopBar.Name = "TopBar"
 	self.TopBar.Size = UDim2.new(1, 0, 0, 45)
@@ -272,7 +269,6 @@ function Muzysh.Init()
 	titleLabel.TextXAlignment = Enum.TextXAlignment.Left
 	titleLabel.Parent = self.TopBar
 
-	-- Botão Fechar Vetorial
 	local closeBtn = Instance.new("TextButton")
 	closeBtn.Size = UDim2.new(0, 32, 0, 32)
 	closeBtn.Position = UDim2.new(1, -40, 0.5, -16)
@@ -291,7 +287,6 @@ function Muzysh.Init()
 		self:Destroy()
 	end))
 
-	-- Sidebar
 	self.Sidebar = Instance.new("Frame")
 	self.Sidebar.Name = "Sidebar"
 	self.Sidebar.Size = UDim2.new(0, 140, 1, -45)
@@ -316,7 +311,6 @@ function Muzysh.Init()
 	sidePadding.PaddingTop = UDim.new(0, 12)
 	sidePadding.Parent = self.Sidebar
 
-	-- Container de Páginas usando CanvasGroup para Efeito Fade e Slide Suave
 	self.PageContainer = Instance.new("Frame")
 	self.PageContainer.Name = "PageContainer"
 	self.PageContainer.Size = UDim2.new(1, -156, 1, -61)
@@ -328,7 +322,6 @@ function Muzysh.Init()
 	self.Tabs = {}
 	self.FirstPage = nil
 
-	-- Animação de Abertura Balística Premium
 	self.MainFrame.Size = UDim2.new(0, 500, 0, 50)
 	self.MainFrame.BackgroundTransparency = 0.5
 	CreateTween(self.MainFrame, 0.5, {Size = UDim2.new(0, 600, 0, 380), BackgroundTransparency = 0}, Enum.EasingStyle.Exponential)
@@ -372,7 +365,6 @@ function Muzysh:CreatePage(pageName)
 	pagePadding.PaddingLeft = UDim.new(0, 2)
 	pagePadding.Parent = pageFrame
 
-	-- Botão Ergonomico da Sidebar (Tamanho Otimizado Mobile)
 	local tabBtn = Instance.new("TextButton")
 	tabBtn.Name = pageName .. "_Tab"
 	tabBtn.Size = UDim2.new(0, 124, 0, 36)
@@ -472,7 +464,7 @@ function Muzysh:CreatePage(pageName)
 		textLabel.Parent = labelFrame
 	end
 
-	-- [[ COMPONENTE: BOTÃO PREMIUM COM INTERAÇÃO MECÂNICA ]]
+	-- [[ COMPONENTE: BOTÃO ]]
 	function elements:CreateButton(btnText, callback)
 		callback = callback or function() end
 		
@@ -516,7 +508,7 @@ function Muzysh:CreatePage(pageName)
 		end))
 	end
 
-	-- [[ COMPONENTE: TOGGLE PREMIUM MECÂNICO ]]
+	-- [[ COMPONENTE: TOGGLE ]]
 	function elements:CreateToggle(toggleText, default, callback)
 		callback = callback or function() end
 		local state = default or false
@@ -587,7 +579,7 @@ function Muzysh:CreatePage(pageName)
 		end))
 	end
 
-	-- [[ COMPONENTE: SLIDER FINO COM TOOLTIP INTEGRADO ]]
+	-- [[ COMPONENTE: SLIDER ]]
 	function elements:CreateSlider(sliderText, min, max, default, callback)
 		callback = callback or function() end
 		local value = default or min
@@ -692,7 +684,7 @@ function Muzysh:CreatePage(pageName)
 		end))
 	end
 
-	-- [[ COMPONENTE: DROPDOWN SOBREPOSTO (ZINDEX FIX) ]]
+	-- [[ COMPONENTE: DROPDOWN ]]
 	function elements:CreateDropdown(dropText, list, callback)
 		callback = callback or function() end
 		local isOpened = false
@@ -728,7 +720,6 @@ function Muzysh:CreatePage(pageName)
 		arrow.Size = UDim2.new(0, 42, 0, 42)
 		arrow.Position = UDim2.new(1, -42, 0, 0)
 		arrow.BackgroundTransparency = 1
-		arrow.Text = "└┘" -- Caractere simulando setas compactas ou use texto limpo
 		arrow.Text = "▼"
 		arrow.TextColor3 = Theme.TextMuted
 		arrow.Font = Theme.Font
@@ -775,7 +766,7 @@ function Muzysh:CreatePage(pageName)
 		Muzysh.Janitor:Add(mainBtn.MouseButton1Click:Connect(function()
 			isOpened = not isOpened
 			if isOpened then
-				dropFrame.ZIndex = 10 -- Eleva o componente sobre os outros ao expandir
+				dropFrame.ZIndex = 10
 				local neededHeight = 48 + (#list * 36)
 				CreateTween(dropFrame, 0.25, {Size = UDim2.new(1, 0, 0, neededHeight)})
 				CreateTween(arrow, 0.25, {Rotation = 180})
@@ -787,7 +778,7 @@ function Muzysh:CreatePage(pageName)
 		end))
 	end
 
-	-- [[ COMPONENTE: TEXTBOX VALIDADA ]]
+	-- [[ COMPONENTE: TEXTBOX ]]
 	function elements:CreateTextBox(placeholder, callback)
 		callback = callback or function() end
 
