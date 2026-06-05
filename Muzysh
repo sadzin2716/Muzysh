@@ -11,7 +11,7 @@ local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
 
--- [[ GERENCIADOR DE LIMPEZA (PREVINE MEMORY LEAK) ]]
+-- [[ GERENCIADOR DE LIMPEZA ]]
 local Janitor = {}
 Janitor.__index = Janitor
 
@@ -37,27 +37,27 @@ function Janitor:Clean()
 	self.connections = {}
 end
 
--- [[ TEMA PREMIUM E ELEVAÇÃO DE SUPERFÍCIES ]]
+-- [[ TEMA PREMIUM REFINADO ]]
 local Theme = {
-	Background = Color3.fromRGB(12, 12, 14),     -- Neutral 100 (Profundo)
-	Sidebar = Color3.fromRGB(18, 18, 22),        -- Neutral 200 (Navegação)
-	TopBar = Color3.fromRGB(18, 18, 22),         -- Neutral 200 (Painel Superior)
-	CardBg = Color3.fromRGB(24, 24, 30),         -- Neutral 300 (Componentes)
-	CardHover = Color3.fromRGB(32, 32, 40),      -- Neutral 400 (Foco)
-	Accent = Color3.fromRGB(225, 40, 58),        -- Ruby Red Premium
-	AccentHover = Color3.fromRGB(255, 65, 85),   -- Brilho Ativo
-	AccentMuted = Color3.fromRGB(50, 18, 22),    -- Fundo de Foco Sutil
-	TextColor = Color3.fromRGB(245, 245, 247),   -- Branco Apple
-	TextMuted = Color3.fromRGB(140, 140, 150),   -- Cinza Confortável
-	Stroke = Color3.fromRGB(35, 35, 42),         -- Borda de Profundidade
-	CornerRadius = UDim.new(0, 10),
+	Background = Color3.fromRGB(15, 15, 18),     -- Fundo Profundo OLED
+	Sidebar = Color3.fromRGB(22, 22, 26),        -- Lateral Sólida
+	TopBar = Color3.fromRGB(22, 22, 26),         -- Superior Sólida
+	CardBg = Color3.fromRGB(28, 28, 34),         -- Elementos Neutros
+	CardHover = Color3.fromRGB(36, 36, 44),      -- Feedback de Foco
+	Accent = Color3.fromRGB(235, 45, 65),        -- Vermelho Muzysh Premium
+	AccentHover = Color3.fromRGB(255, 75, 95),   -- Ativo Brilhante
+	AccentMuted = Color3.fromRGB(65, 25, 30),    -- Bordas de Seleção
+	TextColor = Color3.fromRGB(255, 255, 255),   -- Texto Principal
+	TextMuted = Color3.fromRGB(160, 160, 175),   -- Texto Secundário
+	Stroke = Color3.fromRGB(42, 42, 50),         -- Bordas Gerais
+	CornerRadius = UDim.new(0, 8),
 	Font = Enum.Font.GothamMedium,
 	FontBold = Enum.Font.GothamBold,
 	FontMono = Enum.Font.RobotoMono
 }
 
 local function CreateTween(instance, duration, properties, style)
-	style = style or Enum.EasingStyle.Cubic
+	style = style or Enum.EasingStyle.Quad
 	local tweenInfo = TweenInfo.new(duration, style, Enum.EasingDirection.Out)
 	local tween = TweenService:Create(instance, tweenInfo, properties)
 	tween:Play()
@@ -100,100 +100,15 @@ local function MakeDraggable(dragFrame, parentFrame, janitor)
 	end))
 end
 
--- [[ SISTEMA GLOBAL DE NOTIFICAÇÕES ]]
-local NotificationHolder = nil
-local function EnsureNotificationHolder(parentGui)
-	if not NotificationHolder then
-		NotificationHolder = Instance.new("Frame")
-		NotificationHolder.Name = "Muzysh_Notifications"
-		NotificationHolder.Size = UDim2.new(0, 280, 1, -40)
-		NotificationHolder.Position = UDim2.new(1, -300, 0, 20)
-		NotificationHolder.BackgroundTransparency = 1
-		NotificationHolder.Parent = parentGui
-
-		local layout = Instance.new("UIListLayout")
-		layout.Padding = UDim.new(0, 8)
-		layout.VerticalAlignment = Enum.VerticalAlignment.Bottom
-		layout.SortOrder = Enum.SortOrder.LayoutOrder
-		layout.Parent = NotificationHolder
-	end
-end
-
--- [[ METODO DE NOTIFICACAO ACESSIVEL VIA LIBRARY ]]
-function Muzysh:Notify(title, desc, duration)
-	duration = duration or 4
-	EnsureNotificationHolder(self.ScreenGui)
-
-	local card = Instance.new("Frame")
-	card.Size = UDim2.new(1, 0, 0, 65)
-	card.BackgroundColor3 = Theme.CardBg
-	card.BackgroundTransparency = 0.05
-	card.Parent = NotificationHolder
-
-	local cc = Instance.new("UICorner")
-	cc.CornerRadius = UDim.new(0, 8)
-	cc.Parent = card
-
-	local cs = Instance.new("UIStroke")
-	cs.Color = Theme.Stroke
-	cs.Thickness = 1
-	cs.Parent = card
-
-	local tLabel = Instance.new("TextLabel")
-	tLabel.Size = UDim2.new(1, -20, 0, 22)
-	tLabel.Position = UDim2.new(0, 10, 0, 6)
-	tLabel.BackgroundTransparency = 1
-	tLabel.Text = title
-	tLabel.TextColor3 = Theme.Accent
-	tLabel.Font = Theme.FontBold
-	tLabel.TextSize = 13
-	tLabel.TextXAlignment = Enum.TextXAlignment.Left
-	tLabel.Parent = card
-
-	local dLabel = Instance.new("TextLabel")
-	dLabel.Size = UDim2.new(1, -20, 0, 30)
-	dLabel.Position = UDim2.new(0, 10, 0, 26)
-	dLabel.BackgroundTransparency = 1
-	dLabel.Text = desc
-	dLabel.TextColor3 = Theme.TextColor
-	dLabel.Font = Theme.Font
-	dLabel.TextSize = 11
-	dLabel.TextWrapped = true
-	dLabel.TextXAlignment = Enum.TextXAlignment.Left
-	dLabel.TextYAlignment = Enum.TextYAlignment.Top
-	dLabel.Parent = card
-
-	local progress = Instance.new("Frame")
-	progress.Size = UDim2.new(1, 0, 0, 3)
-	progress.Position = UDim2.new(0, 0, 1, -3)
-	progress.BackgroundColor3 = Theme.Accent
-	progress.BorderSizePixel = 0
-	progress.Parent = card
-
-	local pc = Instance.new("UICorner")
-	pc.CornerRadius = UDim.new(0, 2)
-	pc.Parent = progress
-
-	card.Position = UDim2.new(1, 50, 0, 0)
-	CreateTween(card, 0.3, {Position = UDim2.new(0, 0, 0, 0)})
-	CreateTween(progress, duration, {Size = UDim2.new(0, 0, 0, 3)}, Enum.EasingStyle.Linear)
-
-	task.delay(duration, function()
-		CreateTween(card, 0.3, {Position = UDim2.new(1, 50, 0, 0)})
-		task.wait(0.3)
-		card:Destroy()
-	end)
-end
-
 -- [[ INICIALIZADOR DA UI ]]
 function Muzysh.Init()
 	local self = setmetatable({}, Muzysh)
 	self.Janitor = Janitor.new()
 	
 	self.ScreenGui = Instance.new("ScreenGui")
-	self.ScreenGui.Name = "Muzysh_Premium"
+	self.ScreenGui.Name = "Muzysh_Pro_UI"
 	self.ScreenGui.ResetOnSpawn = false
-	self.ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+	self.ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Global -- Alterado para evitar bugs de Dropdown
 	
 	if syn and syn.protect_gui then
 		syn.protect_gui(self.ScreenGui)
@@ -206,8 +121,8 @@ function Muzysh.Init()
 	
 	self.MainFrame = Instance.new("Frame")
 	self.MainFrame.Name = "MainFrame"
-	self.MainFrame.Size = UDim2.new(0, 600, 0, 380)
-	self.MainFrame.Position = UDim2.new(0.5, -300, 0.5, -190 + (inset.Y / 2))
+	self.MainFrame.Size = UDim2.new(0, 580, 0, 360)
+	self.MainFrame.Position = UDim2.new(0.5, -290, 0.5, -180 + (inset.Y / 2))
 	self.MainFrame.BackgroundColor3 = Theme.Background
 	self.MainFrame.ClipsDescendants = true
 	self.MainFrame.Parent = self.ScreenGui
@@ -221,21 +136,13 @@ function Muzysh.Init()
 	stroke.Thickness = 1
 	stroke.Parent = self.MainFrame
 
-	local strokeGrad = Instance.new("UIGradient")
-	strokeGrad.Color = ColorSequence.new({
-		ColorSequenceKeypoint.new(0, Color3.fromRGB(60, 60, 70)),
-		ColorSequenceKeypoint.new(1, Color3.fromRGB(25, 25, 30))
-	})
-	strokeGrad.Rotation = 45
-	strokeGrad.Parent = stroke
-
 	local uiScale = Instance.new("UIScale")
 	uiScale.Parent = self.MainFrame
 	
 	local function AdaptLayout()
 		local viewport = workspace.CurrentCamera.ViewportSize
-		if viewport.X < 640 or viewport.Y < 420 then
-			uiScale.Scale = math.min(viewport.X / 640, viewport.Y / 420) * 0.95
+		if viewport.X < 600 or viewport.Y < 400 then
+			uiScale.Scale = math.min(viewport.X / 620, viewport.Y / 420)
 		else
 			uiScale.Scale = 1
 		end
@@ -243,10 +150,12 @@ function Muzysh.Init()
 	AdaptLayout()
 	self.Janitor:Add(workspace.CurrentCamera:GetPropertyChangedSignal("ViewportSize"):Connect(AdaptLayout))
 
+	-- BARRA SUPERIOR
 	self.TopBar = Instance.new("Frame")
 	self.TopBar.Name = "TopBar"
-	self.TopBar.Size = UDim2.new(1, 0, 0, 45)
+	self.TopBar.Size = UDim2.new(1, 0, 0, 40)
 	self.TopBar.BackgroundColor3 = Theme.TopBar
+	self.TopBar.ZIndex = 5
 	self.TopBar.Parent = self.MainFrame
 	MakeDraggable(self.TopBar, self.MainFrame, self.Janitor)
 
@@ -259,39 +168,41 @@ function Muzysh.Init()
 
 	local titleLabel = Instance.new("TextLabel")
 	titleLabel.Size = UDim2.new(0, 250, 1, 0)
-	titleLabel.Position = UDim2.new(0, 16, 0, 0)
+	titleLabel.Position = UDim2.new(0, 14, 0, 0)
 	titleLabel.BackgroundTransparency = 1
-	titleLabel.Text = "MUZYSH <font color='rgb(225,40,58)'>//</font> <font color='rgb(140,140,150)'>v2.0</font>"
+	titleLabel.Text = "MUZYSH <font color='rgb(235,45,65)'>//</font> <font color='rgb(160,160,175)'>PRO</font>"
 	titleLabel.TextColor3 = Theme.TextColor
 	titleLabel.Font = Theme.FontBold
-	titleLabel.TextSize = 15
+	titleLabel.TextSize = 14
 	titleLabel.RichText = true
 	titleLabel.TextXAlignment = Enum.TextXAlignment.Left
 	titleLabel.Parent = self.TopBar
 
 	local closeBtn = Instance.new("TextButton")
 	closeBtn.Size = UDim2.new(0, 32, 0, 32)
-	closeBtn.Position = UDim2.new(1, -40, 0.5, -16)
+	closeBtn.Position = UDim2.new(1, -36, 0.5, -16)
 	closeBtn.BackgroundTransparency = 1
 	closeBtn.Text = "✕"
 	closeBtn.TextColor3 = Theme.TextMuted
 	closeBtn.Font = Theme.Font
-	closeBtn.TextSize = 16
+	closeBtn.TextSize = 14
 	closeBtn.Parent = self.TopBar
 
-	self.Janitor:Add(closeBtn.MouseEnter:Connect(function() CreateTween(closeBtn, 0.2, {TextColor3 = Theme.Accent}) end))
-	self.Janitor:Add(closeBtn.MouseLeave:Connect(function() CreateTween(closeBtn, 0.2, {TextColor3 = Theme.TextMuted}) end))
+	self.Janitor:Add(closeBtn.MouseEnter:Connect(function() CreateTween(closeBtn, 0.15, {TextColor3 = Theme.Accent}) end))
+	self.Janitor:Add(closeBtn.MouseLeave:Connect(function() CreateTween(closeBtn, 0.15, {TextColor3 = Theme.TextMuted}) end))
 	self.Janitor:Add(closeBtn.MouseButton1Click:Connect(function()
-		CreateTween(self.MainFrame, 0.3, {Size = UDim2.new(0, 0, 0, 0), BackgroundTransparency = 1}, Enum.EasingStyle.Exponential)
-		task.wait(0.3)
+		CreateTween(self.MainFrame, 0.25, {Size = UDim2.new(0, 0, 0, 0), BackgroundTransparency = 1}, Enum.EasingStyle.Quad)
+		task.wait(0.25)
 		self:Destroy()
 	end))
 
+	-- SIDEBAR REESTRUTURADA
 	self.Sidebar = Instance.new("Frame")
 	self.Sidebar.Name = "Sidebar"
-	self.Sidebar.Size = UDim2.new(0, 140, 1, -45)
-	self.Sidebar.Position = UDim2.new(0, 0, 0, 45)
+	self.Sidebar.Size = UDim2.new(0, 150, 1, -40)
+	self.Sidebar.Position = UDim2.new(0, 0, 0, 40)
 	self.Sidebar.BackgroundColor3 = Theme.Sidebar
+	self.Sidebar.ZIndex = 4
 	self.Sidebar.Parent = self.MainFrame
 
 	local vertDivider = Instance.new("Frame")
@@ -302,7 +213,7 @@ function Muzysh.Init()
 	vertDivider.Parent = self.Sidebar
 
 	local sideLayout = Instance.new("UIListLayout")
-	sideLayout.Padding = UDim.new(0, 4)
+	sideLayout.Padding = UDim.new(0, 6)
 	sideLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
 	sideLayout.SortOrder = Enum.SortOrder.LayoutOrder
 	sideLayout.Parent = self.Sidebar
@@ -311,25 +222,23 @@ function Muzysh.Init()
 	sidePadding.PaddingTop = UDim.new(0, 12)
 	sidePadding.Parent = self.Sidebar
 
+	-- CONTAINER DE PÁGINAS
 	self.PageContainer = Instance.new("Frame")
 	self.PageContainer.Name = "PageContainer"
-	self.PageContainer.Size = UDim2.new(1, -156, 1, -61)
-	self.PageContainer.Position = UDim2.new(0, 148, 0, 53)
+	self.PageContainer.Size = UDim2.new(1, -166, 1, -52)
+	self.PageContainer.Position = UDim2.new(0, 158, 0, 48)
 	self.PageContainer.BackgroundTransparency = 1
+	self.PageContainer.ZIndex = 3
 	self.PageContainer.Parent = self.MainFrame
 
 	self.Pages = {}
 	self.Tabs = {}
 	self.FirstPage = nil
 
-	self.MainFrame.Size = UDim2.new(0, 500, 0, 50)
-	self.MainFrame.BackgroundTransparency = 0.5
-	CreateTween(self.MainFrame, 0.5, {Size = UDim2.new(0, 600, 0, 380), BackgroundTransparency = 0}, Enum.EasingStyle.Exponential)
-
 	return self
 end
 
--- [[ CRIADOR DE PÁGINAS COM SUPORTE A CANVASGROUP ]]
+-- [[ CRIADOR DE PÁGINAS ]]
 function Muzysh:CreatePage(pageName)
 	local pageId = #self.Pages + 1
 
@@ -339,71 +248,77 @@ function Muzysh:CreatePage(pageName)
 	canvasGroup.BackgroundTransparency = 1
 	canvasGroup.GroupTransparency = 1
 	canvasGroup.Visible = false
+	canvasGroup.ZIndex = 3
 	canvasGroup.Parent = self.PageContainer
 
 	local pageFrame = Instance.new("ScrollingFrame")
 	pageFrame.Name = "Content"
 	pageFrame.Size = UDim2.new(1, 0, 1, 0)
 	pageFrame.BackgroundTransparency = 1
-	pageFrame.ScrollBarThickness = 3
+	pageFrame.ScrollBarThickness = 2
 	pageFrame.ScrollBarImageColor3 = Theme.Accent
-	pageFrame.ScrollBarImageTransparency = 0.4
+	pageFrame.ScrollBarImageTransparency = 0.5
 	pageFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
+	pageFrame.ClipsDescendants = false -- Permite que Dropdowns expandidos apareçam livremente
 	pageFrame.Parent = canvasGroup
 
 	local pageLayout = Instance.new("UIListLayout")
-	pageLayout.Padding = UDim.new(0, 7)
+	pageLayout.Padding = UDim.new(0, 6)
 	pageLayout.SortOrder = Enum.SortOrder.LayoutOrder
 	pageLayout.Parent = pageFrame
 
 	self.Janitor:Add(pageLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-		pageFrame.CanvasSize = UDim2.new(0, 0, 0, pageLayout.AbsoluteContentSize.Y + 10)
+		pageFrame.CanvasSize = UDim2.new(0, 0, 0, pageLayout.AbsoluteContentSize.Y + 15)
 	end))
 
 	local pagePadding = Instance.new("UIPadding")
-	pagePadding.PaddingRight = UDim.new(0, 6)
-	pagePadding.PaddingLeft = UDim.new(0, 2)
+	pagePadding.PaddingRight = UDim.new(0, 4)
+	pagePadding.PaddingLeft = UDim.new(0, 4)
 	pagePadding.Parent = pageFrame
 
+	-- BOTÃO DA ABA CORRIGIDO E VISÍVEL
 	local tabBtn = Instance.new("TextButton")
 	tabBtn.Name = pageName .. "_Tab"
-	tabBtn.Size = UDim2.new(0, 124, 0, 36)
-	tabBtn.BackgroundTransparency = 1
+	tabBtn.Size = UDim2.new(0, 134, 0, 32)
+	tabBtn.BackgroundTransparency = 0.95
+	tabBtn.BackgroundColor3 = Theme.TextColor
 	tabBtn.Text = "   " .. pageName
 	tabBtn.TextColor3 = Theme.TextMuted
 	tabBtn.Font = Theme.Font
-	tabBtn.TextSize = 13
+	tabBtn.TextSize = 12
 	tabBtn.TextXAlignment = Enum.TextXAlignment.Left
+	tabBtn.ZIndex = 5
 	tabBtn.Parent = self.Sidebar
 
 	local tabCorner = Instance.new("UICorner")
-	tabCorner.CornerRadius = UDim.new(0, 6)
+	tabCorner.CornerRadius = UDim.new(0, 4)
 	tabCorner.Parent = tabBtn
 
 	local indicator = Instance.new("Frame")
 	indicator.Size = UDim2.new(0, 3, 0, 0)
+	indicator.AnchorPoint = Vector2.new(0, 0.5)
 	indicator.Position = UDim2.new(0, 0, 0.5, 0)
 	indicator.BackgroundColor3 = Theme.Accent
 	indicator.BorderSizePixel = 0
+	indicator.ZIndex = 6
 	indicator.Parent = tabBtn
 
 	local function SelectPage()
 		for _, p in pairs(self.Pages) do
 			if p.Visible then
-				CreateTween(p, 0.2, {GroupTransparency = 1, Position = UDim2.new(0, -15, 0, 0)})
-				task.delay(0.2, function() p.Visible = false end)
+				CreateTween(p, 0.15, {GroupTransparency = 1})
+				p.Visible = false
 			end
 		end
 		for t, ind in pairs(self.Tabs) do 
-			CreateTween(t, 0.2, {TextColor3 = Theme.TextMuted, BackgroundColor3 = Theme.Sidebar})
-			CreateTween(ind, 0.2, {Size = UDim2.new(0, 3, 0, 0), Position = UDim2.new(0, 0, 0.5, 0)})
+			CreateTween(t, 0.15, {TextColor3 = Theme.TextMuted, BackgroundTransparency = 0.95})
+			CreateTween(ind, 0.15, {Size = UDim2.new(0, 3, 0, 0)})
 		end
 
 		canvasGroup.Visible = true
-		canvasGroup.Position = UDim2.new(0, 15, 0, 0)
-		CreateTween(canvasGroup, 0.25, {GroupTransparency = 0, Position = UDim2.new(0, 0, 0, 0)})
-		CreateTween(tabBtn, 0.2, {TextColor3 = Theme.TextColor, BackgroundColor3 = Theme.CardBg})
-		CreateTween(indicator, 0.25, {Size = UDim2.new(0, 3, 0, 16), Position = UDim2.new(0, 0, 0.28, 0)})
+		CreateTween(canvasGroup, 0.2, {GroupTransparency = 0})
+		CreateTween(tabBtn, 0.15, {TextColor3 = Theme.TextColor, BackgroundTransparency = 0.85})
+		CreateTween(indicator, 0.2, {Size = UDim2.new(0, 3, 0, 14)})
 	end
 
 	self.Janitor:Add(tabBtn.MouseButton1Click:Connect(SelectPage))
@@ -417,10 +332,10 @@ function Muzysh:CreatePage(pageName)
 
 	local elements = {}
 
-	-- [[ COMPONENTE: SEÇÃO COM RÓTULO MONOESPACADO ]]
+	-- [[ COMPONENTE: SEÇÃO ]]
 	function elements:CreateSection(titleText)
 		local sectionFrame = Instance.new("Frame")
-		sectionFrame.Size = UDim2.new(1, 0, 0, 30)
+		sectionFrame.Size = UDim2.new(1, 0, 0, 24)
 		sectionFrame.BackgroundTransparency = 1
 		sectionFrame.Parent = pageFrame
 
@@ -428,98 +343,26 @@ function Muzysh:CreatePage(pageName)
 		label.Size = UDim2.new(1, 0, 1, 0)
 		label.Text = titleText:upper()
 		label.Font = Theme.FontMono
-		label.TextSize = 11
+		label.TextSize = 10
 		label.TextColor3 = Theme.Accent
 		label.TextXAlignment = Enum.TextXAlignment.Left
 		label.BackgroundTransparency = 1
 		label.Parent = sectionFrame
 	end
 
-	-- [[ COMPONENTE: TEXT / PARAGRAPH ]]
-	function elements:CreateLabel(textDesc)
-		local labelFrame = Instance.new("Frame")
-		labelFrame.Size = UDim2.new(1, 0, 0, 35)
-		labelFrame.BackgroundColor3 = Theme.CardBg
-		labelFrame.Parent = pageFrame
-
-		local lc = Instance.new("UICorner")
-		lc.CornerRadius = UDim.new(0, 6)
-		lc.Parent = labelFrame
-
-		local ls = Instance.new("UIStroke")
-		ls.Color = Theme.Stroke
-		ls.Thickness = 1
-		ls.Parent = labelFrame
-
-		local textLabel = Instance.new("TextLabel")
-		textLabel.Size = UDim2.new(1, -20, 1, 0)
-		textLabel.Position = UDim2.new(0, 10, 0, 0)
-		textLabel.BackgroundTransparency = 1
-		textLabel.Text = textDesc
-		textLabel.TextColor3 = Theme.TextColor
-		textLabel.Font = Theme.Font
-		textLabel.TextSize = 13
-		textLabel.TextXAlignment = Enum.TextXAlignment.Left
-		textLabel.TextWrapped = true
-		textLabel.Parent = labelFrame
-	end
-
-	-- [[ COMPONENTE: BOTÃO ]]
-	function elements:CreateButton(btnText, callback)
-		callback = callback or function() end
-		
-		local btnFrame = Instance.new("Frame")
-		btnFrame.Size = UDim2.new(1, 0, 0, 42)
-		btnFrame.BackgroundColor3 = Theme.CardBg
-		btnFrame.Parent = pageFrame
-
-		local bc = Instance.new("UICorner")
-		bc.CornerRadius = UDim.new(0, 6)
-		bc.Parent = btnFrame
-
-		local bs = Instance.new("UIStroke")
-		bs.Color = Theme.Stroke
-		bs.Thickness = 1
-		bs.Parent = btnFrame
-
-		local realBtn = Instance.new("TextButton")
-		realBtn.Size = UDim2.new(1, 0, 1, 0)
-		realBtn.BackgroundTransparency = 1
-		realBtn.Text = btnText
-		realBtn.TextColor3 = Theme.TextColor
-		realBtn.Font = Theme.Font
-		realBtn.TextSize = 13
-		realBtn.Parent = btnFrame
-
-		Muzysh.Janitor:Add(realBtn.MouseEnter:Connect(function() 
-			CreateTween(btnFrame, 0.2, {BackgroundColor3 = Theme.CardHover})
-			CreateTween(bs, 0.2, {Color = Theme.Accent})
-		end))
-		Muzysh.Janitor:Add(realBtn.MouseLeave:Connect(function() 
-			CreateTween(btnFrame, 0.2, {BackgroundColor3 = Theme.CardBg})
-			CreateTween(bs, 0.2, {Color = Theme.Stroke})
-		end))
-		Muzysh.Janitor:Add(realBtn.MouseButton1Down:Connect(function()
-			CreateTween(btnFrame, 0.1, {Size = UDim2.new(1, -6, 0, 38), Position = UDim2.new(0, 3, 0, 2)})
-		end))
-		Muzysh.Janitor:Add(realBtn.MouseButton1Up:Connect(function()
-			CreateTween(btnFrame, 0.1, {Size = UDim2.new(1, 0, 0, 42), Position = UDim2.new(0, 0, 0, 0)})
-			callback()
-		end))
-	end
-
-	-- [[ COMPONENTE: TOGGLE ]]
+	-- [[ COMPONENTE: TOGGLE (CORRIGIDO) ]]
 	function elements:CreateToggle(toggleText, default, callback)
 		callback = callback or function() end
 		local state = default or false
 
 		local toggleFrame = Instance.new("Frame")
-		toggleFrame.Size = UDim2.new(1, 0, 0, 44)
+		toggleFrame.Size = UDim2.new(1, 0, 0, 38)
 		toggleFrame.BackgroundColor3 = Theme.CardBg
+		toggleFrame.ZIndex = 4
 		toggleFrame.Parent = pageFrame
 
 		local tc = Instance.new("UICorner")
-		tc.CornerRadius = UDim.new(0, 6)
+		tc.CornerRadius = UDim.new(0, 5)
 		tc.Parent = toggleFrame
 
 		local ts = Instance.new("UIStroke")
@@ -529,19 +372,19 @@ function Muzysh:CreatePage(pageName)
 
 		local label = Instance.new("TextLabel")
 		label.Size = UDim2.new(0.7, 0, 1, 0)
-		label.Position = UDim2.new(0, 12, 0, 0)
+		label.Position = UDim2.new(0, 10, 0, 0)
 		label.BackgroundTransparency = 1
 		label.Text = toggleText
 		label.TextColor3 = Theme.TextColor
 		label.Font = Theme.Font
-		label.TextSize = 13
+		label.TextSize = 12
 		label.TextXAlignment = Enum.TextXAlignment.Left
 		label.Parent = toggleFrame
 
 		local switch = Instance.new("TextButton")
-		switch.Size = UDim2.new(0, 40, 0, 20)
-		switch.Position = UDim2.new(1, -52, 0.5, -10)
-		switch.BackgroundColor3 = Color3.fromRGB(35, 35, 42)
+		switch.Size = UDim2.new(0, 34, 0, 18)
+		switch.Position = UDim2.new(1, -44, 0.5, -9)
+		switch.BackgroundColor3 = Color3.fromRGB(40, 40, 48)
 		switch.Text = ""
 		switch.Parent = toggleFrame
 
@@ -550,8 +393,9 @@ function Muzysh:CreatePage(pageName)
 		sc.Parent = switch
 
 		local knob = Instance.new("Frame")
-		knob.Size = UDim2.new(0, 14, 0, 14)
-		knob.Position = state and UDim2.new(1, -17, 0.5, -7) or UDim2.new(0, 3, 0.5, -7)
+		knob.Size = UDim2.new(0, 12, 0, 12)
+		knob.AnchorPoint = Vector2.new(0, 0.5)
+		knob.Position = state and UDim2.new(1, -15, 0.5, 0) or UDim2.new(0, 3, 0.5, 0)
 		knob.BackgroundColor3 = Theme.TextColor
 		knob.Parent = switch
 
@@ -561,22 +405,19 @@ function Muzysh:CreatePage(pageName)
 
 		if state then 
 			switch.BackgroundColor3 = Theme.Accent 
-			ts.Color = Theme.AccentMuted
 		end
 
-		Muzysh.Janitor:Add(switch.MouseButton1Click:Connect(function()
+		switch.MouseButton1Click:Connect(function()
 			state = not state
 			if state then
-				CreateTween(switch, 0.25, {BackgroundColor3 = Theme.Accent}, Enum.EasingStyle.Back)
-				CreateTween(knob, 0.25, {Position = UDim2.new(1, -17, 0.5, -7), Size = UDim2.new(0, 14, 0, 14)})
-				CreateTween(ts, 0.2, {Color = Theme.AccentMuted})
+				CreateTween(switch, 0.15, {BackgroundColor3 = Theme.Accent})
+				CreateTween(knob, 0.15, {Position = UDim2.new(1, -15, 0.5, 0)})
 			else
-				CreateTween(switch, 0.25, {BackgroundColor3 = Color3.fromRGB(35, 35, 42)}, Enum.EasingStyle.Back)
-				CreateTween(knob, 0.25, {Position = UDim2.new(0, 3, 0.5, -7), Size = UDim2.new(0, 14, 0, 14)})
-				CreateTween(ts, 0.2, {Color = Theme.Stroke})
+				CreateTween(switch, 0.15, {BackgroundColor3 = Color3.fromRGB(40, 40, 48)})
+				CreateTween(knob, 0.15, {Position = UDim2.new(0, 3, 0.5, 0)})
 			end
 			callback(state)
-		end))
+		end)
 	end
 
 	-- [[ COMPONENTE: SLIDER ]]
@@ -585,12 +426,12 @@ function Muzysh:CreatePage(pageName)
 		local value = default or min
 
 		local sliderFrame = Instance.new("Frame")
-		sliderFrame.Size = UDim2.new(1, 0, 0, 52)
+		sliderFrame.Size = UDim2.new(1, 0, 0, 46)
 		sliderFrame.BackgroundColor3 = Theme.CardBg
 		sliderFrame.Parent = pageFrame
 
 		local slc = Instance.new("UICorner")
-		slc.CornerRadius = UDim.new(0, 6)
+		slc.CornerRadius = UDim.new(0, 5)
 		slc.Parent = sliderFrame
 
 		local sls = Instance.new("UIStroke")
@@ -599,37 +440,33 @@ function Muzysh:CreatePage(pageName)
 		sls.Parent = sliderFrame
 
 		local label = Instance.new("TextLabel")
-		label.Size = UDim2.new(0.6, 0, 0, 24)
-		label.Position = UDim2.new(0, 12, 0, 4)
+		label.Size = UDim2.new(0.6, 0, 0, 20)
+		label.Position = UDim2.new(0, 10, 0, 4)
 		label.BackgroundTransparency = 1
 		label.Text = sliderText
 		label.TextColor3 = Theme.TextColor
 		label.Font = Theme.Font
-		label.TextSize = 13
+		label.TextSize = 12
 		label.TextXAlignment = Enum.TextXAlignment.Left
 		label.Parent = sliderFrame
 
 		local valLabel = Instance.new("TextLabel")
-		valLabel.Size = UDim2.new(0.3, 0, 0, 24)
-		valLabel.Position = UDim2.new(1, -112, 0, 4)
+		valLabel.Size = UDim2.new(0.3, 0, 0, 20)
+		valLabel.Position = UDim2.new(1, -10 + -90, 0, 4)
 		valLabel.BackgroundTransparency = 1
 		valLabel.Text = tostring(value)
 		valLabel.TextColor3 = Theme.Accent
 		valLabel.Font = Theme.FontMono
-		valLabel.TextSize = 13
+		valLabel.TextSize = 12
 		valLabel.TextXAlignment = Enum.TextXAlignment.Right
 		valLabel.Parent = sliderFrame
 
 		local track = Instance.new("TextButton")
-		track.Size = UDim2.new(1, -24, 0, 4)
-		track.Position = UDim2.new(0, 12, 0, 36)
-		track.BackgroundColor3 = Color3.fromRGB(38, 38, 45)
+		track.Size = UDim2.new(1, -20, 0, 4)
+		track.Position = UDim2.new(0, 10, 0, 32)
+		track.BackgroundColor3 = Color3.fromRGB(45, 45, 55)
 		track.Text = ""
 		track.Parent = sliderFrame
-
-		local tc = Instance.new("UICorner")
-		tc.CornerRadius = UDim.new(1, 0)
-		tc.Parent = track
 
 		local fill = Instance.new("Frame")
 		fill.Size = UDim2.new((value - min) / (max - min), 0, 1, 0)
@@ -637,13 +474,10 @@ function Muzysh:CreatePage(pageName)
 		fill.BorderSizePixel = 0
 		fill.Parent = track
 
-		local fc = Instance.new("UICorner")
-		fc.CornerRadius = UDim.new(1, 0)
-		fc.Parent = fill
-
 		local knob = Instance.new("Frame")
-		knob.Size = UDim2.new(0, 12, 0, 12)
-		knob.Position = UDim2.new((value - min) / (max - min), -6, 0.5, -6)
+		knob.Size = UDim2.new(0, 10, 0, 10)
+		knob.AnchorPoint = Vector2.new(0.5, 0.5)
+		knob.Position = UDim2.new((value - min) / (max - min), 0, 0.5, 0)
 		knob.BackgroundColor3 = Theme.TextColor
 		knob.Parent = track
 
@@ -657,47 +491,45 @@ function Muzysh:CreatePage(pageName)
 			local percentage = math.clamp((input.Position.X - track.AbsolutePosition.X) / track.AbsoluteWidth, 0, 1)
 			value = math.floor(min + (max - min) * percentage)
 			valLabel.Text = tostring(value)
-			CreateTween(fill, 0.1, {Size = UDim2.new(percentage, 0, 1, 0)})
-			CreateTween(knob, 0.1, {Position = UDim2.new(percentage, -6, 0.5, -6)})
+			fill.Size = UDim2.new(percentage, 0, 1, 0)
+			knob.Position = UDim2.new(percentage, 0, 0.5, 0)
 			callback(value)
 		end
 
-		Muzysh.Janitor:Add(track.InputBegan:Connect(function(input)
+		track.InputBegan:Connect(function(input)
 			if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
 				sliding = true
-				CreateTween(knob, 0.1, {Size = UDim2.new(0, 14, 0, 14), BackgroundValue = Theme.AccentHover})
 				UpdateSlider(input)
 			end
-		end))
+		end)
 
-		Muzysh.Janitor:Add(UserInputService.InputChanged:Connect(function(input)
+		UserInputService.InputChanged:Connect(function(input)
 			if sliding and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
 				UpdateSlider(input)
 			end
-		end))
+		end)
 
-		Muzysh.Janitor:Add(UserInputService.InputEnded:Connect(function(input)
+		UserInputService.InputEnded:Connect(function(input)
 			if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
 				sliding = false
-				CreateTween(knob, 0.1, {Size = UDim2.new(0, 12, 0, 12), BackgroundValue = Theme.TextColor})
 			end
-		end))
+		end)
 	end
 
-	-- [[ COMPONENTE: DROPDOWN ]]
+	-- [[ COMPONENTE: DROPDOWN (CORRIGIDO GLOBALMENTE) ]]
 	function elements:CreateDropdown(dropText, list, callback)
 		callback = callback or function() end
 		local isOpened = false
 
 		local dropFrame = Instance.new("Frame")
-		dropFrame.Size = UDim2.new(1, 0, 0, 42)
+		dropFrame.Size = UDim2.new(1, 0, 0, 38)
 		dropFrame.BackgroundColor3 = Theme.CardBg
 		dropFrame.ClipsDescendants = true
-		dropFrame.ZIndex = 2
+		dropFrame.ZIndex = 100 -- Elevação forçada sobre os outros elementos
 		dropFrame.Parent = pageFrame
 
 		local dc = Instance.new("UICorner")
-		dc.CornerRadius = UDim.new(0, 6)
+		dc.CornerRadius = UDim.new(0, 5)
 		dc.Parent = dropFrame
 
 		local ds = Instance.new("UIStroke")
@@ -706,32 +538,29 @@ function Muzysh:CreatePage(pageName)
 		ds.Parent = dropFrame
 
 		local mainBtn = Instance.new("TextButton")
-		mainBtn.Size = UDim2.new(1, 0, 0, 42)
+		mainBtn.Size = UDim2.new(1, 0, 0, 38)
 		mainBtn.BackgroundTransparency = 1
 		mainBtn.Text = "   " .. dropText
 		mainBtn.TextColor3 = Theme.TextColor
 		mainBtn.Font = Theme.Font
-		mainBtn.TextSize = 13
+		mainBtn.TextSize = 12
 		mainBtn.TextXAlignment = Enum.TextXAlignment.Left
-		mainBtn.ZIndex = 3
 		mainBtn.Parent = dropFrame
 
 		local arrow = Instance.new("TextLabel")
-		arrow.Size = UDim2.new(0, 42, 0, 42)
-		arrow.Position = UDim2.new(1, -42, 0, 0)
+		arrow.Size = UDim2.new(0, 38, 0, 38)
+		arrow.Position = UDim2.new(1, -38, 0, 0)
 		arrow.BackgroundTransparency = 1
 		arrow.Text = "▼"
 		arrow.TextColor3 = Theme.TextMuted
 		arrow.Font = Theme.Font
-		arrow.TextSize = 10
-		arrow.ZIndex = 3
+		arrow.TextSize = 9
 		arrow.Parent = mainBtn
 
 		local listHolder = Instance.new("Frame")
-		listHolder.Size = UDim2.new(1, -20, 1, -48)
-		listHolder.Position = UDim2.new(0, 10, 0, 44)
+		listHolder.Size = UDim2.new(1, -16, 1, -42)
+		listHolder.Position = UDim2.new(0, 8, 0, 40)
 		listHolder.BackgroundTransparency = 1
-		listHolder.ZIndex = 3
 		listHolder.Parent = dropFrame
 
 		local listLayout = Instance.new("UIListLayout")
@@ -740,93 +569,46 @@ function Muzysh:CreatePage(pageName)
 
 		for _, opt in pairs(list) do
 			local optBtn = Instance.new("TextButton")
-			optBtn.Size = UDim2.new(1, 0, 0, 32)
-			optBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 36)
+			optBtn.Size = UDim2.new(1, 0, 0, 28)
+			optBtn.BackgroundColor3 = Color3.fromRGB(34, 34, 42)
 			optBtn.Text = opt
 			optBtn.TextColor3 = Theme.TextMuted
 			optBtn.Font = Theme.Font
-			optBtn.TextSize = 12
-			optBtn.ZIndex = 4
+			optBtn.TextSize = 11
 			optBtn.Parent = listHolder
 
 			local oc = Instance.new("UICorner")
-			oc.CornerRadius = UDim.new(0, 5)
+			oc.CornerRadius = UDim.new(0, 4)
 			oc.Parent = optBtn
 
-			Muzysh.Janitor:Add(optBtn.MouseButton1Click:Connect(function()
+			optBtn.MouseButton1Click:Connect(function()
 				mainBtn.Text = "   " .. dropText .. " (" .. opt .. ")"
 				isOpened = false
-				dropFrame.ZIndex = 2
-				CreateTween(dropFrame, 0.2, {Size = UDim2.new(1, 0, 0, 42)})
-				CreateTween(arrow, 0.2, {Rotation = 0})
+				CreateTween(dropFrame, 0.15, {Size = UDim2.new(1, 0, 0, 38)})
+				CreateTween(arrow, 0.15, {Rotation = 0})
 				callback(opt)
-			end))
+			end)
 		end
 
-		Muzysh.Janitor:Add(mainBtn.MouseButton1Click:Connect(function()
+		mainBtn.MouseButton1Click:Connect(function()
 			isOpened = not isOpened
 			if isOpened then
-				dropFrame.ZIndex = 10
-				local neededHeight = 48 + (#list * 36)
-				CreateTween(dropFrame, 0.25, {Size = UDim2.new(1, 0, 0, neededHeight)})
-				CreateTween(arrow, 0.25, {Rotation = 180})
+				local neededHeight = 42 + (#list * 32)
+				CreateTween(dropFrame, 0.2, {Size = UDim2.new(1, 0, 0, neededHeight)})
+				CreateTween(arrow, 0.2, {Rotation = 180})
 			else
-				dropFrame.ZIndex = 2
-				CreateTween(dropFrame, 0.2, {Size = UDim2.new(1, 0, 0, 42)})
-				CreateTween(arrow, 0.2, {Rotation = 0})
+				CreateTween(dropFrame, 0.15, {Size = UDim2.new(1, 0, 0, 38)})
+				CreateTween(arrow, 0.15, {Rotation = 0})
 			end
-		end))
-	end
-
-	-- [[ COMPONENTE: TEXTBOX ]]
-	function elements:CreateTextBox(placeholder, callback)
-		callback = callback or function() end
-
-		local boxFrame = Instance.new("Frame")
-		boxFrame.Size = UDim2.new(1, 0, 0, 42)
-		boxFrame.BackgroundColor3 = Theme.CardBg
-		boxFrame.Parent = pageFrame
-
-		local tbc = Instance.new("UICorner")
-		tbc.CornerRadius = UDim.new(0, 6)
-		tbc.Parent = boxFrame
-
-		local tbs = Instance.new("UIStroke")
-		tbs.Color = Theme.Stroke
-		tbs.Thickness = 1
-		tbs.Parent = boxFrame
-
-		local box = Instance.new("TextBox")
-		box.Size = UDim2.new(1, -24, 1, 0)
-		box.Position = UDim2.new(0, 12, 0, 0)
-		box.BackgroundTransparency = 1
-		box.PlaceholderText = placeholder
-		box.PlaceholderColor3 = Theme.TextMuted
-		box.Text = ""
-		box.TextColor3 = Theme.TextColor
-		box.Font = Theme.Font
-		box.TextSize = 13
-		box.TextXAlignment = Enum.TextXAlignment.Left
-		box.Parent = boxFrame
-
-		Muzysh.Janitor:Add(box.Focused:Connect(function() CreateTween(tbs, 0.2, {Color = Theme.Accent}) end))
-		Muzysh.Janitor:Add(box.FocusLost:Connect(function(enterPressed) 
-			CreateTween(tbs, 0.2, {Color = Theme.Stroke})
-			callback(box.Text, enterPressed)
-		end))
+		end)
 	end
 
 	return elements
 end
 
--- [[ COLETOR DE LIMPEZA DO CORE DA UI ]]
 function Muzysh:Destroy()
-	if self.Janitor then
-		self.Janitor:Clean()
-	end
-	if self.ScreenGui then
-		self.ScreenGui:Destroy()
-	end
+	if self.Janitor then self.Janitor:Clean() end
+	if self.ScreenGui then self.ScreenGui:Destroy() end
 end
 
 return Muzysh
