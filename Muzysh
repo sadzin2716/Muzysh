@@ -1,5 +1,3 @@
--- Muzysh Hub Library - Versão Atualizada
--- Design Premium, Tema Dark/Red, Ícones Quadrados Arredondados
 local Muzysh = {}
 
 local CoreGui = game:GetService("CoreGui")
@@ -10,16 +8,15 @@ local Players = game:GetService("Players")
 local Player = Players.LocalPlayer
 local TargetParent = (pcall(function() return CoreGui.Name end) and CoreGui) or Player:WaitForChild("PlayerGui")
 
--- Configurações de Identidade Visual
 local Theme = {
     Background = Color3.fromRGB(18, 18, 22),
     Sidebar = Color3.fromRGB(24, 24, 28),
-    Accent = Color3.fromRGB(220, 30, 45), -- Vermelho Intenso
+    Accent = Color3.fromRGB(220, 30, 45),
     Text = Color3.fromRGB(255, 255, 255),
     TextDim = Color3.fromRGB(180, 180, 180),
     ElementBg = Color3.fromRGB(30, 30, 35),
     Hover = Color3.fromRGB(40, 40, 45),
-    Icon = "Icon = "http://www.roblox.com/asset/?id=72939763737478" -- Apenas para testar se o quadrado aparece" -- Sua ID de imagem atualizada
+    Icon = "http://www.roblox.com/asset/?id=72939763737478"
 }
 
 local function CreateTween(instance, properties, duration)
@@ -79,7 +76,6 @@ function Muzysh:CreateWindow(Config)
     ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
     ScreenGui.ResetOnSpawn = false
 
-    -- Janela Principal
     local MainFrame = Instance.new("Frame")
     MainFrame.Name = "MainFrame"
     MainFrame.Size = UDim2.new(0, 600, 0, 400)
@@ -99,7 +95,6 @@ function Muzysh:CreateWindow(Config)
     UIStroke.Transparency = 0.4
     UIStroke.Parent = MainFrame
 
-    -- Sidebar
     local Sidebar = Instance.new("Frame")
     Sidebar.Name = "Sidebar"
     Sidebar.Size = UDim2.new(0, 160, 1, 0)
@@ -118,7 +113,6 @@ function Muzysh:CreateWindow(Config)
     SidebarFix.BorderSizePixel = 0
     SidebarFix.Parent = Sidebar
 
-    -- Logo da Sidebar (Modificada para Quadrada com Cantos Arredondados)
     local Logo = Instance.new("ImageLabel")
     Logo.Size = UDim2.new(0, 36, 0, 36)
     Logo.Position = UDim2.new(0, 12, 0, 14)
@@ -127,7 +121,7 @@ function Muzysh:CreateWindow(Config)
     Logo.Parent = Sidebar
 
     local LogoCorner = Instance.new("UICorner")
-    LogoCorner.CornerRadius = UDim.new(0, 8) -- Cantos suavizados em vez de círculo
+    LogoCorner.CornerRadius = UDim.new(0, 8)
     LogoCorner.Parent = Logo
 
     local TitleLabel = Instance.new("TextLabel")
@@ -141,7 +135,6 @@ function Muzysh:CreateWindow(Config)
     TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
     TitleLabel.Parent = Sidebar
 
-    -- Navegação das Abas
     local TabContainer = Instance.new("ScrollingFrame")
     TabContainer.Size = UDim2.new(1, 0, 1, -70)
     TabContainer.Position = UDim2.new(0, 0, 0, 70)
@@ -160,7 +153,6 @@ function Muzysh:CreateWindow(Config)
     ContentContainer.BackgroundTransparency = 1
     ContentContainer.Parent = MainFrame
 
-    -- Barra Superior
     local Topbar = Instance.new("Frame")
     Topbar.Size = UDim2.new(1, -160, 0, 40)
     Topbar.Position = UDim2.new(0, 160, 0, 0)
@@ -194,7 +186,6 @@ function Muzysh:CreateWindow(Config)
         ScreenGui:Destroy()
     end)
 
-    -- Botão Flutuante quando Minimizado (Quadrado com cantos arredondados)
     local FloatButton = Instance.new("ImageButton")
     FloatButton.Size = UDim2.new(0, 52, 0, 52)
     FloatButton.Position = UDim2.new(0, 25, 0.5, -26)
@@ -204,7 +195,7 @@ function Muzysh:CreateWindow(Config)
     FloatButton.Parent = ScreenGui
     
     local FloatCorner = Instance.new("UICorner")
-    FloatCorner.CornerRadius = UDim.new(0, 12) -- Quadrado arredondado condizente com o Hub
+    FloatCorner.CornerRadius = UDim.new(0, 12)
     FloatCorner.Parent = FloatButton
     
     local FloatStroke = Instance.new("UIStroke")
@@ -231,7 +222,6 @@ function Muzysh:CreateWindow(Config)
         CreateTween(MainFrame, {Size = UDim2.new(0, 600, 0, 400)}, 0.3)
     end)
 
-    -- Interface do Key System Reformulada (Mais limpa e moderna)
     if KeySystem then
         MainFrame.Visible = false
         local KeyFrame = Instance.new("Frame")
@@ -249,7 +239,6 @@ function Muzysh:CreateWindow(Config)
         KeyStroke.Thickness = 1.5
         KeyStroke.Parent = KeyFrame
 
-        -- Ícone no Key System
         local KeyLogo = Instance.new("ImageLabel")
         KeyLogo.Size = UDim2.new(0, 44, 0, 44)
         KeyLogo.Position = UDim2.new(0.5, -22, 0, 18)
@@ -264,11 +253,10 @@ function Muzysh:CreateWindow(Config)
         KeyTitle.Size = UDim2.new(1, 0, 0, 25)
         KeyTitle.Position = UDim2.new(0, 0, 0, 68)
         KeyTitle.BackgroundTransparency = 1
-        KeyTitle.Text = WindowTitle .. " | Sistema de Verificação"
+        KeyTitle.Text = WindowTitle .. " | Verificação"
         KeyTitle.TextColor3 = Theme.Text
         KeyTitle.Font = Enum.Font.GothamBold
         KeyTitle.TextSize = 14
-        KeyTitle.TextXAlignment = Enum.TextXAlignment.Center
         KeyTitle.Parent = KeyFrame
 
         local KeyInput = Instance.new("TextBox")
@@ -324,7 +312,6 @@ function Muzysh:CreateWindow(Config)
         CreateTween(MainFrame, {Size = UDim2.new(0, 600, 0, 400)}, 0.4)
     end
 
-    -- Gerenciamento de Abas Internas
     local Tabs = {}
     local FirstTab = true
 
