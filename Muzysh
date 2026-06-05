@@ -1,5 +1,5 @@
--- Muzysh Hub Library
--- Inspirado em Fluent Library, Design Premium com tema Dark/Red
+-- Muzysh Hub Library - Versão Atualizada
+-- Design Premium, Tema Dark/Red, Ícones Quadrados Arredondados
 local Muzysh = {}
 
 local CoreGui = game:GetService("CoreGui")
@@ -8,7 +8,6 @@ local UserInputService = game:GetService("UserInputService")
 local Players = game:GetService("Players")
 
 local Player = Players.LocalPlayer
--- Suporte para Studio e Executores
 local TargetParent = (pcall(function() return CoreGui.Name end) and CoreGui) or Player:WaitForChild("PlayerGui")
 
 -- Configurações de Identidade Visual
@@ -20,7 +19,7 @@ local Theme = {
     TextDim = Color3.fromRGB(180, 180, 180),
     ElementBg = Color3.fromRGB(30, 30, 35),
     Hover = Color3.fromRGB(40, 40, 45),
-    Icon = "rbxassetid://13495484815" -- SUBSTITUA PELO ID DA SUA LOGO NO ROBLOX
+    Icon = "rbxassetid://111175223932577" -- Sua ID de imagem atualizada
 }
 
 local function CreateTween(instance, properties, duration)
@@ -70,7 +69,6 @@ function Muzysh:CreateWindow(Config)
     local KeySystem = Config.KeySystem or false
     local CorrectKey = Config.Key or "Muzysh123"
 
-    -- Destruir GUI anterior se existir
     if TargetParent:FindFirstChild("MuzyshHub") then
         TargetParent.MuzyshHub:Destroy()
     end
@@ -81,7 +79,7 @@ function Muzysh:CreateWindow(Config)
     ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
     ScreenGui.ResetOnSpawn = false
 
-    -- Container Principal
+    -- Janela Principal
     local MainFrame = Instance.new("Frame")
     MainFrame.Name = "MainFrame"
     MainFrame.Size = UDim2.new(0, 600, 0, 400)
@@ -92,56 +90,58 @@ function Muzysh:CreateWindow(Config)
     MainFrame.Parent = ScreenGui
 
     local UICorner = Instance.new("UICorner")
-    UICorner.CornerRadius = UDim.new(0, 10)
+    UICorner.CornerRadius = UDim.new(0, 12)
     UICorner.Parent = MainFrame
 
-    -- Sombra
     local UIStroke = Instance.new("UIStroke")
     UIStroke.Color = Theme.Accent
-    UIStroke.Thickness = 1
-    UIStroke.Transparency = 0.5
+    UIStroke.Thickness = 1.5
+    UIStroke.Transparency = 0.4
     UIStroke.Parent = MainFrame
 
     -- Sidebar
     local Sidebar = Instance.new("Frame")
     Sidebar.Name = "Sidebar"
-    Sidebar.Size = UDim2.new(0, 150, 1, 0)
+    Sidebar.Size = UDim2.new(0, 160, 1, 0)
     Sidebar.BackgroundColor3 = Theme.Sidebar
     Sidebar.BorderSizePixel = 0
     Sidebar.Parent = MainFrame
 
     local SidebarCorner = Instance.new("UICorner")
-    SidebarCorner.CornerRadius = UDim.new(0, 10)
+    SidebarCorner.CornerRadius = UDim.new(0, 12)
     SidebarCorner.Parent = Sidebar
 
-    -- Arrumando a junção da Sidebar com o MainFrame
     local SidebarFix = Instance.new("Frame")
-    SidebarFix.Size = UDim2.new(0, 10, 1, 0)
-    SidebarFix.Position = UDim2.new(1, -10, 0, 0)
+    SidebarFix.Size = UDim2.new(0, 15, 1, 0)
+    SidebarFix.Position = UDim2.new(1, -15, 0, 0)
     SidebarFix.BackgroundColor3 = Theme.Sidebar
     SidebarFix.BorderSizePixel = 0
     SidebarFix.Parent = Sidebar
 
-    -- Logo e Título
+    -- Logo da Sidebar (Modificada para Quadrada com Cantos Arredondados)
     local Logo = Instance.new("ImageLabel")
-    Logo.Size = UDim2.new(0, 40, 0, 40)
-    Logo.Position = UDim2.new(0, 15, 0, 15)
+    Logo.Size = UDim2.new(0, 36, 0, 36)
+    Logo.Position = UDim2.new(0, 12, 0, 14)
     Logo.BackgroundTransparency = 1
     Logo.Image = Theme.Icon
     Logo.Parent = Sidebar
 
+    local LogoCorner = Instance.new("UICorner")
+    LogoCorner.CornerRadius = UDim.new(0, 8) -- Cantos suavizados em vez de círculo
+    LogoCorner.Parent = Logo
+
     local TitleLabel = Instance.new("TextLabel")
-    TitleLabel.Size = UDim2.new(0, 80, 0, 40)
-    TitleLabel.Position = UDim2.new(0, 60, 0, 15)
+    TitleLabel.Size = UDim2.new(0, 90, 0, 36)
+    TitleLabel.Position = UDim2.new(0, 56, 0, 14)
     TitleLabel.BackgroundTransparency = 1
     TitleLabel.Text = WindowTitle
     TitleLabel.TextColor3 = Theme.Text
     TitleLabel.Font = Enum.Font.GothamBold
-    TitleLabel.TextSize = 18
+    TitleLabel.TextSize = 16
     TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
     TitleLabel.Parent = Sidebar
 
-    -- Container de Abas (Botões)
+    -- Navegação das Abas
     local TabContainer = Instance.new("ScrollingFrame")
     TabContainer.Size = UDim2.new(1, 0, 1, -70)
     TabContainer.Position = UDim2.new(0, 0, 0, 70)
@@ -150,162 +150,194 @@ function Muzysh:CreateWindow(Config)
     TabContainer.Parent = Sidebar
 
     local TabListLayout = Instance.new("UIListLayout")
-    TabListLayout.Padding = UDim.new(0, 5)
+    TabListLayout.Padding = UDim.new(0, 6)
     TabListLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
     TabListLayout.Parent = TabContainer
 
-    -- Container de Conteúdo (Telas das Abas)
     local ContentContainer = Instance.new("Frame")
-    ContentContainer.Size = UDim2.new(1, -150, 1, -40)
-    ContentContainer.Position = UDim2.new(0, 150, 0, 40)
+    ContentContainer.Size = UDim2.new(1, -160, 1, -40)
+    ContentContainer.Position = UDim2.new(0, 160, 0, 40)
     ContentContainer.BackgroundTransparency = 1
     ContentContainer.Parent = MainFrame
 
-    -- Topbar (Para arrastar e fechar/minimizar)
+    -- Barra Superior
     local Topbar = Instance.new("Frame")
-    Topbar.Size = UDim2.new(1, -150, 0, 40)
-    Topbar.Position = UDim2.new(0, 150, 0, 0)
+    Topbar.Size = UDim2.new(1, -160, 0, 40)
+    Topbar.Position = UDim2.new(0, 160, 0, 0)
     Topbar.BackgroundTransparency = 1
     Topbar.Parent = MainFrame
     MakeDraggable(Topbar, MainFrame)
 
     local CloseBtn = Instance.new("TextButton")
     CloseBtn.Size = UDim2.new(0, 30, 0, 30)
-    CloseBtn.Position = UDim2.new(1, -40, 0, 5)
+    CloseBtn.Position = UDim2.new(1, -38, 0, 5)
     CloseBtn.BackgroundTransparency = 1
-    CloseBtn.Text = "X"
+    CloseBtn.Text = "×"
     CloseBtn.TextColor3 = Theme.TextDim
-    CloseBtn.Font = Enum.Font.GothamBold
-    CloseBtn.TextSize = 14
+    CloseBtn.Font = Enum.Font.GothamMedium
+    CloseBtn.TextSize = 22
     CloseBtn.Parent = Topbar
 
     local MinimizeBtn = Instance.new("TextButton")
     MinimizeBtn.Size = UDim2.new(0, 30, 0, 30)
-    MinimizeBtn.Position = UDim2.new(1, -75, 0, 5)
+    MinimizeBtn.Position = UDim2.new(1, -70, 0, 5)
     MinimizeBtn.BackgroundTransparency = 1
-    MinimizeBtn.Text = "-"
+    MinimizeBtn.Text = "−"
     MinimizeBtn.TextColor3 = Theme.TextDim
-    MinimizeBtn.Font = Enum.Font.GothamBold
-    MinimizeBtn.TextSize = 20
+    MinimizeBtn.Font = Enum.Font.GothamMedium
+    MinimizeBtn.TextSize = 18
     MinimizeBtn.Parent = Topbar
 
     CloseBtn.MouseButton1Click:Connect(function()
-        CreateTween(MainFrame, {Size = UDim2.new(0, 0, 0, 0), BackgroundTransparency = 1}, 0.3)
-        task.wait(0.3)
+        CreateTween(MainFrame, {Size = UDim2.new(0, 0, 0, 0), BackgroundTransparency = 1}, 0.25)
+        task.wait(0.25)
         ScreenGui:Destroy()
     end)
 
-    -- Botão Flutuante (Minimizado)
+    -- Botão Flutuante quando Minimizado (Quadrado com cantos arredondados)
     local FloatButton = Instance.new("ImageButton")
-    FloatButton.Size = UDim2.new(0, 50, 0, 50)
-    FloatButton.Position = UDim2.new(0, 20, 0.5, -25)
+    FloatButton.Size = UDim2.new(0, 52, 0, 52)
+    FloatButton.Position = UDim2.new(0, 25, 0.5, -26)
     FloatButton.BackgroundColor3 = Theme.Sidebar
     FloatButton.Image = Theme.Icon
     FloatButton.Visible = false
     FloatButton.Parent = ScreenGui
+    
     local FloatCorner = Instance.new("UICorner")
-    FloatCorner.CornerRadius = UDim.new(1, 0)
+    FloatCorner.CornerRadius = UDim.new(0, 12) -- Quadrado arredondado condizente com o Hub
     FloatCorner.Parent = FloatButton
+    
     local FloatStroke = Instance.new("UIStroke")
     FloatStroke.Color = Theme.Accent
-    FloatStroke.Thickness = 2
+    FloatStroke.Thickness = 1.5
     FloatStroke.Parent = FloatButton
     MakeDraggable(FloatButton, FloatButton)
 
     MinimizeBtn.MouseButton1Click:Connect(function()
-        CreateTween(MainFrame, {Size = UDim2.new(0, 0, 0, 0)}, 0.4)
-        task.wait(0.4)
+        CreateTween(MainFrame, {Size = UDim2.new(0, 0, 0, 0)}, 0.3)
+        task.wait(0.3)
         MainFrame.Visible = false
         FloatButton.Visible = true
-        CreateTween(FloatButton, {Size = UDim2.new(0, 60, 0, 60)}, 0.2)
-        task.wait(0.2)
-        CreateTween(FloatButton, {Size = UDim2.new(0, 50, 0, 50)}, 0.1)
+        CreateTween(FloatButton, {Size = UDim2.new(0, 58, 0, 58)}, 0.15)
+        task.wait(0.15)
+        CreateTween(FloatButton, {Size = UDim2.new(0, 52, 0, 52)}, 0.1)
     end)
 
     FloatButton.MouseButton1Click:Connect(function()
-        CreateTween(FloatButton, {Size = UDim2.new(0, 0, 0, 0)}, 0.2)
-        task.wait(0.2)
+        CreateTween(FloatButton, {Size = UDim2.new(0, 0, 0, 0)}, 0.15)
+        task.wait(0.15)
         FloatButton.Visible = false
         MainFrame.Visible = true
-        CreateTween(MainFrame, {Size = UDim2.new(0, 600, 0, 400)}, 0.4)
+        CreateTween(MainFrame, {Size = UDim2.new(0, 600, 0, 400)}, 0.3)
     end)
 
-    -- Key System
+    -- Interface do Key System Reformulada (Mais limpa e moderna)
     if KeySystem then
         MainFrame.Visible = false
         local KeyFrame = Instance.new("Frame")
-        KeyFrame.Size = UDim2.new(0, 350, 0, 200)
-        KeyFrame.Position = UDim2.new(0.5, -175, 0.5, -100)
+        KeyFrame.Size = UDim2.new(0, 360, 0, 220)
+        KeyFrame.Position = UDim2.new(0.5, -180, 0.5, -110)
         KeyFrame.BackgroundColor3 = Theme.Background
         KeyFrame.Parent = ScreenGui
+        
         local KeyCorner = Instance.new("UICorner")
-        KeyCorner.CornerRadius = UDim.new(0, 10)
+        KeyCorner.CornerRadius = UDim.new(0, 12)
         KeyCorner.Parent = KeyFrame
+        
         local KeyStroke = Instance.new("UIStroke")
         KeyStroke.Color = Theme.Accent
-        KeyStroke.Thickness = 1
+        KeyStroke.Thickness = 1.5
         KeyStroke.Parent = KeyFrame
 
-        local KeyTitle = TitleLabel:Clone()
-        KeyTitle.Parent = KeyFrame
-        KeyTitle.Position = UDim2.new(0, 0, 0, 10)
-        KeyTitle.Size = UDim2.new(1, 0, 0, 30)
+        -- Ícone no Key System
+        local KeyLogo = Instance.new("ImageLabel")
+        KeyLogo.Size = UDim2.new(0, 44, 0, 44)
+        KeyLogo.Position = UDim2.new(0.5, -22, 0, 18)
+        KeyLogo.BackgroundTransparency = 1
+        KeyLogo.Image = Theme.Icon
+        KeyLogo.Parent = KeyFrame
+        local KeyLogoCorner = Instance.new("UICorner")
+        KeyLogoCorner.CornerRadius = UDim.new(0, 10)
+        KeyLogoCorner.Parent = KeyLogo
+
+        local KeyTitle = Instance.new("TextLabel")
+        KeyTitle.Size = UDim2.new(1, 0, 0, 25)
+        KeyTitle.Position = UDim2.new(0, 0, 0, 68)
+        KeyTitle.BackgroundTransparency = 1
+        KeyTitle.Text = WindowTitle .. " | Sistema de Verificação"
+        KeyTitle.TextColor3 = Theme.Text
+        KeyTitle.Font = Enum.Font.GothamBold
+        KeyTitle.TextSize = 14
         KeyTitle.TextXAlignment = Enum.TextXAlignment.Center
-        KeyTitle.Text = WindowTitle .. " - Key System"
+        KeyTitle.Parent = KeyFrame
 
         local KeyInput = Instance.new("TextBox")
-        KeyInput.Size = UDim2.new(0, 280, 0, 40)
-        KeyInput.Position = UDim2.new(0.5, -140, 0.5, -20)
+        KeyInput.Size = UDim2.new(0, 290, 0, 38)
+        KeyInput.Position = UDim2.new(0.5, -145, 0.5, 2)
         KeyInput.BackgroundColor3 = Theme.ElementBg
         KeyInput.TextColor3 = Theme.Text
         KeyInput.Font = Enum.Font.Gotham
-        KeyInput.TextSize = 14
-        KeyInput.PlaceholderText = "Insira sua Key..."
+        KeyInput.TextSize = 13
+        KeyInput.PlaceholderText = "Insira sua chave de acesso aqui..."
+        KeyInput.PlaceholderColor3 = Color3.fromRGB(120, 120, 125)
+        KeyInput.Text = ""
         KeyInput.Parent = KeyFrame
-        Instance.new("UICorner", KeyInput).CornerRadius = UDim.new(0, 6)
+        Instance.new("UICorner", KeyInput).CornerRadius = UDim.new(0, 8)
+        
+        local InputStroke = Instance.new("UIStroke")
+        InputStroke.Color = Color3.fromRGB(50, 50, 55)
+        InputStroke.Thickness = 1
+        InputStroke.Parent = KeyInput
 
         local SubmitBtn = Instance.new("TextButton")
-        SubmitBtn.Size = UDim2.new(0, 120, 0, 35)
-        SubmitBtn.Position = UDim2.new(0.5, -60, 1, -50)
+        SubmitBtn.Size = UDim2.new(0, 140, 0, 36)
+        SubmitBtn.Position = UDim2.new(0.5, -70, 1, -48)
         SubmitBtn.BackgroundColor3 = Theme.Accent
-        SubmitBtn.Text = "Verificar"
+        SubmitBtn.Text = "Confirmar Key"
         SubmitBtn.TextColor3 = Theme.Text
         SubmitBtn.Font = Enum.Font.GothamBold
-        SubmitBtn.TextSize = 14
+        SubmitBtn.TextSize = 13
         SubmitBtn.Parent = KeyFrame
-        Instance.new("UICorner", SubmitBtn).CornerRadius = UDim.new(0, 6)
+        Instance.new("UICorner", SubmitBtn).CornerRadius = UDim.new(0, 8)
+
+        SubmitBtn.MouseEnter:Connect(function() CreateTween(SubmitBtn, {BackgroundColor3 = Color3.fromRGB(250, 40, 55)}, 0.2) end)
+        SubmitBtn.MouseLeave:Connect(function() CreateTween(SubmitBtn, {BackgroundColor3 = Theme.Accent}, 0.2) end)
 
         SubmitBtn.MouseButton1Click:Connect(function()
             if KeyInput.Text == CorrectKey then
-                CreateTween(KeyFrame, {Size = UDim2.new(0, 0, 0, 0), BackgroundTransparency = 1}, 0.4)
-                task.wait(0.4)
+                CreateTween(KeyFrame, {Size = UDim2.new(0, 0, 0, 0), BackgroundTransparency = 1}, 0.3)
+                task.wait(0.3)
                 KeyFrame:Destroy()
                 MainFrame.Visible = true
                 MainFrame.Size = UDim2.new(0, 0, 0, 0)
-                CreateTween(MainFrame, {Size = UDim2.new(0, 600, 0, 400)}, 0.5)
+                CreateTween(MainFrame, {Size = UDim2.new(0, 600, 0, 400)}, 0.4)
             else
-                KeyInput.Text = "Key Incorreta!"
-                task.wait(1)
+                InputStroke.Color = Color3.fromRGB(220, 30, 45)
                 KeyInput.Text = ""
+                KeyInput.PlaceholderText = "Chave Inválida! Tente novamente."
+                task.wait(2)
+                InputStroke.Color = Color3.fromRGB(50, 50, 55)
+                KeyInput.PlaceholderText = "Insira sua chave de acesso aqui..."
             end
         end)
     else
-        CreateTween(MainFrame, {Size = UDim2.new(0, 600, 0, 400)}, 0.5)
+        CreateTween(MainFrame, {Size = UDim2.new(0, 600, 0, 400)}, 0.4)
     end
 
-    -- Sistema de Abas Interno
+    -- Gerenciamento de Abas Internas
     local Tabs = {}
     local FirstTab = true
 
     function Tabs:CreateTab(TabName)
         local TabBtn = Instance.new("TextButton")
-        TabBtn.Size = UDim2.new(0, 130, 0, 35)
+        TabBtn.Size = UDim2.new(0, 140, 0, 34)
         TabBtn.BackgroundColor3 = Theme.ElementBg
         TabBtn.BackgroundTransparency = 1
-        TabBtn.Text = TabName
+        TabBtn.Text = "  " .. TabName
         TabBtn.TextColor3 = Theme.TextDim
         TabBtn.Font = Enum.Font.GothamSemibold
-        TabBtn.TextSize = 14
+        TabBtn.TextSize = 13
+        TabBtn.TextXAlignment = Enum.TextXAlignment.Left
         TabBtn.Parent = TabContainer
 
         local TabBtnCorner = Instance.new("UICorner")
@@ -317,6 +349,7 @@ function Muzysh:CreateWindow(Config)
         TabPage.Position = UDim2.new(0, 10, 0, 10)
         TabPage.BackgroundTransparency = 1
         TabPage.ScrollBarThickness = 2
+        TabPage.ScrollBarImageColor3 = Theme.Accent
         TabPage.Visible = FirstTab
         TabPage.Parent = ContentContainer
 
@@ -346,7 +379,6 @@ function Muzysh:CreateWindow(Config)
             TabPage.Visible = true
         end)
 
-        -- Componentes da Aba
         local Elements = {}
 
         function Elements:AddButton(BtnText, Callback)
@@ -356,16 +388,18 @@ function Muzysh:CreateWindow(Config)
             Button.Text = "  " .. BtnText
             Button.TextColor3 = Theme.Text
             Button.Font = Enum.Font.Gotham
-            Button.TextSize = 14
+            Button.TextSize = 13
             Button.TextXAlignment = Enum.TextXAlignment.Left
             Button.Parent = TabPage
 
             Instance.new("UICorner", Button).CornerRadius = UDim.new(0, 6)
+            
             local ClickIcon = Instance.new("ImageLabel")
-            ClickIcon.Size = UDim2.new(0, 20, 0, 20)
-            ClickIcon.Position = UDim2.new(1, -30, 0.5, -10)
+            ClickIcon.Size = UDim2.new(0, 16, 0, 16)
+            ClickIcon.Position = UDim2.new(1, -28, 0.5, -8)
             ClickIcon.BackgroundTransparency = 1
-            ClickIcon.Image = "rbxassetid://10816912306" -- Ícone genérico de click
+            ClickIcon.Image = "rbxassetid://10816912306"
+            ClickIcon.ImageColor3 = Theme.TextDim
             ClickIcon.Parent = Button
 
             Button.MouseEnter:Connect(function() CreateTween(Button, {BackgroundColor3 = Theme.Hover}, 0.2) end)
@@ -386,19 +420,23 @@ function Muzysh:CreateWindow(Config)
             ToggleFrame.Text = "  " .. ToggleText
             ToggleFrame.TextColor3 = Theme.Text
             ToggleFrame.Font = Enum.Font.Gotham
-            ToggleFrame.TextSize = 14
+            ToggleFrame.TextSize = 13
             ToggleFrame.TextXAlignment = Enum.TextXAlignment.Left
             ToggleFrame.Parent = TabPage
 
             Instance.new("UICorner", ToggleFrame).CornerRadius = UDim.new(0, 6)
 
             local CheckmarkBg = Instance.new("Frame")
-            CheckmarkBg.Size = UDim2.new(0, 24, 0, 24)
-            CheckmarkBg.Position = UDim2.new(1, -34, 0.5, -12)
+            CheckmarkBg.Size = UDim2.new(0, 20, 0, 20)
+            CheckmarkBg.Position = UDim2.new(1, -30, 0.5, -10)
             CheckmarkBg.BackgroundColor3 = Theme.Background
             CheckmarkBg.Parent = ToggleFrame
-            Instance.new("UICorner", CheckmarkBg).CornerRadius = UDim.new(0, 6)
-            Instance.new("UIStroke", CheckmarkBg).Color = Theme.Accent
+            Instance.new("UICorner", CheckmarkBg).CornerRadius = UDim.new(0, 5)
+            
+            local CheckStroke = Instance.new("UIStroke")
+            CheckStroke.Color = Color3.fromRGB(60, 60, 65)
+            CheckStroke.Thickness = 1
+            CheckStroke.Parent = CheckmarkBg
 
             local CheckInner = Instance.new("Frame")
             CheckInner.Size = UDim2.new(0, 0, 0, 0)
@@ -406,13 +444,18 @@ function Muzysh:CreateWindow(Config)
             CheckInner.BackgroundColor3 = Theme.Accent
             CheckInner.AnchorPoint = Vector2.new(0.5, 0.5)
             CheckInner.Parent = CheckmarkBg
-            Instance.new("UICorner", CheckInner).CornerRadius = UDim.new(0, 4)
+            Instance.new("UICorner", CheckInner).CornerRadius = UDim.new(0, 3)
+
+            ToggleFrame.MouseEnter:Connect(function() CreateTween(ToggleFrame, {BackgroundColor3 = Theme.Hover}, 0.2) end)
+            ToggleFrame.MouseLeave:Connect(function() CreateTween(ToggleFrame, {BackgroundColor3 = Theme.ElementBg}, 0.2) end)
 
             ToggleFrame.MouseButton1Click:Connect(function()
                 Toggled = not Toggled
                 if Toggled then
-                    CreateTween(CheckInner, {Size = UDim2.new(1, -8, 1, -8)}, 0.2)
+                    CheckStroke.Color = Theme.Accent
+                    CreateTween(CheckInner, {Size = UDim2.new(1, -6, 1, -6)}, 0.2)
                 else
+                    CheckStroke.Color = Color3.fromRGB(60, 60, 65)
                     CreateTween(CheckInner, {Size = UDim2.new(0, 0, 0, 0)}, 0.2)
                 end
                 Callback(Toggled)
