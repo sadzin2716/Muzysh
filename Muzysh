@@ -1,6 +1,10 @@
+-- [[ MUZYSH UI LIBRARY - PREMIUM & MODERN USER INTERFACE ]]
+-- Desenvolvida em Luau com foco em Mobile-First, Performance e Modularidade.
+
 local Muzysh = {}
 Muzysh.__index = Muzysh
 
+-- [[ SERVIÇOS DO ROBLOX ]]
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
 local CoreGui = game:GetService("CoreGui")
@@ -9,6 +13,7 @@ local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
 
+-- [[ CONFIGURAÇÕES DE DESIGN (TEMA ESCURO & VERMELHO) ]]
 local Theme = {
 	Background = Color3.fromRGB(15, 15, 15),
 	TopBar = Color3.fromRGB(22, 22, 22),
@@ -24,6 +29,7 @@ local Theme = {
 	FontBold = Enum.Font.GothamBold
 }
 
+-- [[ FUNÇÕES AUXILIARES ]]
 local function CreateTween(instance, duration, properties)
 	local tweenInfo = TweenInfo.new(duration, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
 	local tween = TweenService:Create(instance, tweenInfo, properties)
@@ -67,14 +73,17 @@ local function MakeDraggable(dragFrame, parentFrame)
 	end)
 end
 
-function Muzysh.Init()
+-- [[ CONSTRUTOR DA WINDOW PRINCIPAL ]]
+function Muzysh.Init(title)
 	local self = setmetatable({}, Muzysh)
 	
+	-- Instância base da ScreenGui
 	self.ScreenGui = Instance.new("ScreenGui")
 	self.ScreenGui.Name = "Muzysh_Library"
 	self.ScreenGui.ResetOnSpawn = false
 	self.ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 	
+	-- Proteção básica contra detecção simples (se injetado)
 	if syn and syn.protect_gui then
 		syn.protect_gui(self.ScreenGui)
 		self.ScreenGui.Parent = CoreGui
@@ -82,14 +91,16 @@ function Muzysh.Init()
 		self.ScreenGui.Parent = PlayerGui
 	end
 
+	-- Container Principal (Responsivo para Mobile)
 	self.MainFrame = Instance.new("Frame")
 	self.MainFrame.Name = "MainFrame"
-	self.MainFrame.Size = UDim2.new(0, 580, 0, 360)
+	self.MainFrame.Size = UDim2.new(0, 580, 0, 360) -- Proporções perfeitas para Mobile e PC
 	self.MainFrame.Position = UDim2.new(0.5, -290, 0.5, -180)
 	self.MainFrame.BackgroundColor3 = Theme.Background
 	self.MainFrame.ClipsDescendants = true
 	self.MainFrame.Parent = self.ScreenGui
 
+	-- Cantos Arredondados e Borda Sutil
 	local corner = Instance.new("UICorner")
 	corner.CornerRadius = Theme.CornerRadius
 	corner.Parent = self.MainFrame
@@ -99,6 +110,7 @@ function Muzysh.Init()
 	stroke.Thickness = 1
 	stroke.Parent = self.MainFrame
 
+	-- Responsividade automática via UIScale para telas muito pequenas
 	local uiScale = Instance.new("UIScale")
 	uiScale.Parent = self.MainFrame
 	
@@ -113,6 +125,7 @@ function Muzysh.Init()
 	UpdateScale()
 	workspace.CurrentCamera:GetPropertyChangedSignal("ViewportSize"):Connect(UpdateScale)
 
+	-- TopBar
 	self.TopBar = Instance.new("Frame")
 	self.TopBar.Name = "TopBar"
 	self.TopBar.Size = UDim2.new(1, 0, 0, 45)
@@ -124,6 +137,7 @@ function Muzysh.Init()
 	topCorner.CornerRadius = Theme.CornerRadius
 	topCorner.Parent = self.TopBar
 
+	-- Título (Logo + Nome)
 	local titleLabel = Instance.new("TextLabel")
 	titleLabel.Size = UDim2.new(0, 200, 1, 0)
 	titleLabel.Position = UDim2.new(0, 15, 0, 0)
@@ -136,6 +150,7 @@ function Muzysh.Init()
 	titleLabel.TextXAlignment = Enum.TextXAlignment.Left
 	titleLabel.Parent = self.TopBar
 
+	-- Botão Fechar
 	local closeBtn = Instance.new("TextButton")
 	closeBtn.Size = UDim2.new(0, 35, 0, 35)
 	closeBtn.Position = UDim2.new(1, -40, 0, 5)
@@ -149,11 +164,12 @@ function Muzysh.Init()
 	closeBtn.MouseEnter:Connect(function() CreateTween(closeBtn, 0.2, {TextColor3 = Theme.Accent}) end)
 	closeBtn.MouseLeave:Connect(function() CreateTween(closeBtn, 0.2, {TextColor3 = Theme.TextMuted}) end)
 	closeBtn.MouseButton1Click:Connect(function()
-		CreateTween(self.MainFrame, 0.3, {Size = UDim2.new(0,0,0,0)})
+		CreateTween(self.MainFrame, 0.3, {Size = UDim2.new(0,0,0,0), ImageTransparency = 1})
 		task.wait(0.3)
 		self.ScreenGui:Destroy()
 	end)
 
+	-- Sidebar (Menu de Navegação Lateral)
 	self.Sidebar = Instance.new("Frame")
 	self.Sidebar.Name = "Sidebar"
 	self.Sidebar.Size = UDim2.new(0, 130, 1, -45)
@@ -171,6 +187,7 @@ function Muzysh.Init()
 	sidePadding.PaddingTop = UDim.new(0, 10)
 	sidePadding.Parent = self.Sidebar
 
+	-- Container de Páginas (Onde os scripts/elementos vão ficar)
 	self.PageContainer = Instance.new("Frame")
 	self.PageContainer.Name = "PageContainer"
 	self.PageContainer.Size = UDim2.new(1, -140, 1, -55)
@@ -182,15 +199,18 @@ function Muzysh.Init()
 	self.Tabs = {}
 	self.FirstPage = nil
 
+	-- Animação de entrada Premium
 	self.MainFrame.Size = UDim2.new(0, 0, 0, 0)
 	CreateTween(self.MainFrame, 0.4, {Size = UDim2.new(0, 580, 0, 360)})
 
 	return self
 end
 
+-- [[ CRIADOR DE ABAS (PÁGINAS) ]]
 function Muzysh:CreatePage(pageName)
 	local pageId = #self.Pages + 1
 
+	-- Frame da Página de Conteúdo (Scrolling para suportar infinitos componentes)
 	local pageFrame = Instance.new("ScrollingFrame")
 	pageFrame.Name = pageName .. "_Page"
 	pageFrame.Size = UDim2.new(1, 0, 1, 0)
@@ -216,6 +236,7 @@ function Muzysh:CreatePage(pageName)
 	pagePadding.PaddingTop = UDim.new(0, 5)
 	pagePadding.Parent = pageFrame
 
+	-- Botão da Aba na Sidebar
 	local tabBtn = Instance.new("TextButton")
 	tabBtn.Name = pageName .. "_Tab"
 	tabBtn.Size = UDim2.new(0, 115, 0, 35)
@@ -232,6 +253,7 @@ function Muzysh:CreatePage(pageName)
 	tabCorner.CornerRadius = UDim.new(0, 6)
 	tabCorner.Parent = tabBtn
 
+	-- Indicador Lateral Ativo (Visual Premium)
 	local indicator = Instance.new("Frame")
 	indicator.Size = UDim2.new(0, 3, 0, 0)
 	indicator.Position = UDim2.new(0, 0, 0.5, 0)
@@ -239,6 +261,7 @@ function Muzysh:CreatePage(pageName)
 	indicator.BorderSizePixel = 0
 	indicator.Parent = tabBtn
 
+	-- Mecânica de Alternância de Abas
 	local function SelectPage()
 		for _, p in pairs(self.Pages) do p.Visible = false end
 		for t, ind in pairs(self.Tabs) do 
@@ -259,8 +282,10 @@ function Muzysh:CreatePage(pageName)
 		task.spawn(SelectPage)
 	end
 
+	-- Métodos internos para adicionar componentes dentro desta página específica
 	local elements = {}
 
+	-- [ COMPONENTE: SEPARADOR / TÍTULO ]
 	function elements:CreateSection(titleText)
 		local sectionFrame = Instance.new("Frame")
 		sectionFrame.Size = UDim2.new(1, 0, 0, 25)
@@ -278,6 +303,7 @@ function Muzysh:CreatePage(pageName)
 		label.Parent = sectionFrame
 	end
 
+	-- [ COMPONENTE: BOTÃO PREMIUM ]
 	function elements:CreateButton(btnText, callback)
 		callback = callback or function() end
 		
@@ -304,6 +330,7 @@ function Muzysh:CreatePage(pageName)
 		rbCorner.CornerRadius = UDim.new(0, 6)
 		rbCorner.Parent = realBtn
 
+		-- Efeito de Hover e Clique Responsivo (Scale Effect)
 		realBtn.MouseEnter:Connect(function() CreateTween(realBtn, 0.2, {BackgroundColor3 = Theme.AccentHover}) end)
 		realBtn.MouseLeave:Connect(function() CreateTween(realBtn, 0.2, {BackgroundColor3 = Theme.Accent}) end)
 		
@@ -317,6 +344,7 @@ function Muzysh:CreatePage(pageName)
 		end)
 	end
 
+	-- [ COMPONENTE: TOGGLE (CHAVE) ]
 	function elements:CreateToggle(toggleText, default, callback)
 		callback = callback or function() end
 		local state = default or false
@@ -341,6 +369,7 @@ function Muzysh:CreatePage(pageName)
 		label.TextXAlignment = Enum.TextXAlignment.Left
 		label.Parent = toggleFrame
 
+		-- Switch externo
 		local switch = Instance.new("TextButton")
 		switch.Size = UDim2.new(0, 42, 0, 22)
 		switch.Position = UDim2.new(1, -54, 0.5, -11)
@@ -352,6 +381,7 @@ function Muzysh:CreatePage(pageName)
 		swCorner.CornerRadius = UDim.new(1, 0)
 		swCorner.Parent = switch
 
+		-- Slider interno
 		local sliderCircle = Instance.new("Frame")
 		sliderCircle.Size = UDim2.new(0, 16, 0, 16)
 		sliderCircle.Position = state and UDim2.new(1, -20, 0.5, -8) or UDim2.new(0, 4, 0.5, -8)
@@ -377,6 +407,7 @@ function Muzysh:CreatePage(pageName)
 		end)
 	end
 
+	-- [ COMPONENTE: SLIDER ]
 	function elements:CreateSlider(sliderText, min, max, default, callback)
 		callback = callback or function() end
 		local value = default or min
@@ -412,6 +443,7 @@ function Muzysh:CreatePage(pageName)
 		valLabel.TextXAlignment = Enum.TextXAlignment.Right
 		valLabel.Parent = sliderFrame
 
+		-- Trilha do Slider
 		local track = Instance.new("TextButton")
 		track.Size = UDim2.new(1, -24, 0, 6)
 		track.Position = UDim2.new(0, 12, 0, 34)
@@ -433,7 +465,8 @@ function Muzysh:CreatePage(pageName)
 		fillCorner.CornerRadius = UDim.new(1, 0)
 		fillCorner.Parent = fill
 
-		local snap = Instance.new("Frame")
+		-- Lógica de Arrastar com Mouse/Touch
+		local snap = Instance.new("Frame") -- Knob oculto/área ampliada para toque fácil
 		snap.Size = UDim2.new(0, 16, 0, 16)
 		snap.Position = UDim2.new((value - min) / (max - min), -8, 0.5, -8)
 		snap.BackgroundColor3 = Theme.TextColor
@@ -474,6 +507,7 @@ function Muzysh:CreatePage(pageName)
 		end)
 	end
 
+	-- [ COMPONENTE: DROPDOWN ]
 	function elements:CreateDropdown(dropText, list, callback)
 		callback = callback or function() end
 		local isOpened = false
@@ -508,6 +542,7 @@ function Muzysh:CreatePage(pageName)
 		arrow.TextSize = 12
 		arrow.Parent = mainBtn
 
+		-- Lista Container
 		local listHolder = Instance.new("Frame")
 		listHolder.Size = UDim2.new(1, -20, 1, -45)
 		listHolder.Position = UDim2.new(0, 10, 0, 42)
@@ -518,6 +553,7 @@ function Muzysh:CreatePage(pageName)
 		listLayout.Padding = UDim.new(0, 4)
 		listLayout.Parent = listHolder
 
+		-- População dos botões da lista
 		for _, opt in pairs(list) do
 			local optBtn = Instance.new("TextButton")
 			optBtn.Size = UDim2.new(1, 0, 0, 30)
@@ -554,6 +590,7 @@ function Muzysh:CreatePage(pageName)
 		end)
 	end
 
+	-- [ COMPONENTE: TEXTBOX (CAMPO DE TEXTO) ]
 	function elements:CreateTextBox(placeholder, callback)
 		callback = callback or function() end
 
@@ -584,6 +621,7 @@ function Muzysh:CreatePage(pageName)
 		box.TextXAlignment = Enum.TextXAlignment.Left
 		box.Parent = boxFrame
 
+		-- Feedback Visual de Foco (Glow Accent)
 		box.Focused:Connect(function() CreateTween(stroke, 0.2, {Color = Theme.Accent}) end)
 		box.FocusLost:Connect(function(enterPressed) 
 			CreateTween(stroke, 0.2, {Color = Theme.Stroke})
@@ -593,5 +631,49 @@ function Muzysh:CreatePage(pageName)
 
 	return elements
 end
+
+-- ============================================================================
+-- [[ EXEMPLO PRÁTICO DE USO DA LIBRARY ]]
+-- ============================================================================
+
+local Window = Muzysh.Init()
+
+-- Criação da Aba Home
+local Home = Window:CreatePage("Home")
+Home:CreateSection("Geral")
+Home:CreateButton("Injetar Script Exemplo", function()
+	print("Muzysh Premium UI carregada perfeitamente no Mobile/PC!")
+end)
+
+Home:CreateToggle("Ativar Auto Farm", false, function(value)
+	print("Auto Farm definido para:", value)
+end)
+
+Home:CreateSlider("Velocidade do Jogador", 16, 150, 16, function(value)
+	if LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid") then
+		LocalPlayer.Character:FindFirstChildOfClass("Humanoid").WalkSpeed = value
+	end
+end)
+
+-- Criação da Aba Scripts
+local Scripts = Window:CreatePage("Scripts")
+Scripts:CreateSection("Teleportes")
+Scripts:CreateDropdown("Selecione o Mundo", {"Mundo Inicial", "Zona Desértica", "Ilha de Lava", "Nível Secreto"}, function(selected)
+	print("Teleportando para:", selected)
+end)
+
+Scripts:CreateSection("Customização")
+Scripts:CreateTextBox("Digite o ID da Animação...", function(text, enterPressed)
+	if enterPressed then
+		print("ID enviado:", text)
+	end
+end)
+
+-- Criação da Aba Configurações
+local Settings = Window:CreatePage("Settings")
+Settings:CreateSection("Interface")
+Settings:CreateToggle("Ativar Notificações", true, function(state)
+	print("Notificações:", state)
+end)
 
 return Muzysh
