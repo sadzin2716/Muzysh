@@ -19,7 +19,7 @@ local Theme = {
     TextDim = Color3.fromRGB(180, 180, 180),
     ElementBg = Color3.fromRGB(30, 30, 35),
     Hover = Color3.fromRGB(40, 40, 45),
-    Icon = "rbxassetid://111175223932577" -- Sua ID de imagem atualizada
+    Icon = "https://create.roblox.com/store/asset/91224224846791/file0000000072d4720e94973e56b8fe49b3" -- Sua ID de imagem atualizada
 }
 
 local function CreateTween(instance, properties, duration)
