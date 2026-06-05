@@ -19,7 +19,7 @@ local Theme = {
     TextDim = Color3.fromRGB(180, 180, 180),
     ElementBg = Color3.fromRGB(30, 30, 35),
     Hover = Color3.fromRGB(40, 40, 45),
-    Icon = "Icon = "72939763737478" -- Apenas para testar se o quadrado aparece" -- Sua ID de imagem atualizada
+    Icon = "Icon = "http://www.roblox.com/asset/?id=72939763737478" -- Apenas para testar se o quadrado aparece" -- Sua ID de imagem atualizada
 }
 
 local function CreateTween(instance, properties, duration)
