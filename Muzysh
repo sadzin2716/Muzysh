@@ -1,3 +1,10 @@
+--[[
+    Muzysh Hub Library
+    Aparência Premium, Moderna e Altamente Polida
+    Identidade Visual: Tema Dark, Detalhes em Vermelho Intenso e Branco
+    Suporte Universal: Keybind (PC) + Toggle Button Redondo (Mobile)
+--]]
+
 local Muzysh = {}
 
 local CoreGui = game:GetService("CoreGui")
@@ -65,6 +72,7 @@ function Muzysh:CreateWindow(Config)
     local WindowTitle = Config.Title or "Muzysh Hub"
     local KeySystem = Config.KeySystem or false
     local CorrectKey = Config.Key or "Muzysh123"
+    local ToggleKey = Config.ToggleKey or Enum.KeyCode.RightControl
 
     if TargetParent:FindFirstChild("MuzyshHub") then
         TargetParent.MuzyshHub:Destroy()
@@ -186,44 +194,68 @@ function Muzysh:CreateWindow(Config)
         ScreenGui:Destroy()
     end)
 
-    local FloatButton = Instance.new("ImageButton")
-    FloatButton.Size = UDim2.new(0, 52, 0, 52)
-    FloatButton.Position = UDim2.new(0, 25, 0.5, -26)
-    FloatButton.BackgroundColor3 = Theme.Sidebar
-    FloatButton.Image = Theme.Icon
-    FloatButton.Visible = false
-    FloatButton.Parent = ScreenGui
-    
-    local FloatCorner = Instance.new("UICorner")
-    FloatCorner.CornerRadius = UDim.new(0, 12)
-    FloatCorner.Parent = FloatButton
-    
-    local FloatStroke = Instance.new("UIStroke")
-    FloatStroke.Color = Theme.Accent
-    FloatStroke.Thickness = 1.5
-    FloatStroke.Parent = FloatButton
-    MakeDraggable(FloatButton, FloatButton)
+    -- Sistema de Toggle Híbrido (Keybind + Ícone Redondo Limpo para Mobile)
+    local UIVisible = true
+    local KeyPassed = not KeySystem
 
-    MinimizeBtn.MouseButton1Click:Connect(function()
-        CreateTween(MainFrame, {Size = UDim2.new(0, 0, 0, 0)}, 0.3)
-        task.wait(0.3)
-        MainFrame.Visible = false
-        FloatButton.Visible = true
-        CreateTween(FloatButton, {Size = UDim2.new(0, 58, 0, 58)}, 0.15)
-        task.wait(0.15)
-        CreateTween(FloatButton, {Size = UDim2.new(0, 52, 0, 52)}, 0.1)
+    -- Ícone de Toggle Arrastável (Aparece apenas quando fechado)
+    local MobileToggle = Instance.new("ImageButton")
+    MobileToggle.Size = UDim2.new(0, 42, 0, 42)
+    MobileToggle.Position = UDim2.new(0.5, -21, 0, 20) -- Topo centralizado por padrão
+    MobileToggle.BackgroundColor3 = Theme.Sidebar
+    MobileToggle.Image = Theme.Icon
+    MobileToggle.Visible = false
+    MobileToggle.Parent = ScreenGui
+    
+    -- Design Circular para ficar limpo
+    local ToggleCorner = Instance.new("UICorner")
+    ToggleCorner.CornerRadius = UDim.new(1, 0)
+    ToggleCorner.Parent = MobileToggle
+    
+    local ToggleStroke = Instance.new("UIStroke")
+    ToggleStroke.Color = Theme.Accent
+    ToggleStroke.Thickness = 1.5
+    ToggleStroke.Parent = MobileToggle
+    
+    MakeDraggable(MobileToggle, MobileToggle)
+
+    local function ToggleUI(forceState)
+        if forceState ~= nil then
+            UIVisible = forceState
+        else
+            UIVisible = not UIVisible
+        end
+
+        if UIVisible then
+            MobileToggle.Visible = false
+            MainFrame.Visible = true
+            CreateTween(MainFrame, {Size = UDim2.new(0, 600, 0, 400)}, 0.3)
+        else
+            CreateTween(MainFrame, {Size = UDim2.new(0, 0, 0, 0)}, 0.3)
+            task.wait(0.3)
+            MainFrame.Visible = false
+            if KeyPassed then
+                MobileToggle.Visible = true -- Só mostra o botão se já tiver passado do sistema de Key
+            end
+        end
+    end
+
+    MinimizeBtn.MouseButton1Click:Connect(function() ToggleUI(false) end)
+    MobileToggle.MouseButton1Click:Connect(function() ToggleUI(true) end)
+
+    UserInputService.InputBegan:Connect(function(input, gameProcessed)
+        if not gameProcessed and input.KeyCode == ToggleKey then
+            if KeyPassed then
+                ToggleUI()
+            end
+        end
     end)
 
-    FloatButton.MouseButton1Click:Connect(function()
-        CreateTween(FloatButton, {Size = UDim2.new(0, 0, 0, 0)}, 0.15)
-        task.wait(0.15)
-        FloatButton.Visible = false
-        MainFrame.Visible = true
-        CreateTween(MainFrame, {Size = UDim2.new(0, 600, 0, 400)}, 0.3)
-    end)
-
+    -- Sistema de Validação Integrado (Key System)
     if KeySystem then
         MainFrame.Visible = false
+        UIVisible = false
+        
         local KeyFrame = Instance.new("Frame")
         KeyFrame.Size = UDim2.new(0, 360, 0, 220)
         KeyFrame.Position = UDim2.new(0.5, -180, 0.5, -110)
@@ -296,13 +328,15 @@ function Muzysh:CreateWindow(Config)
                 CreateTween(KeyFrame, {Size = UDim2.new(0, 0, 0, 0), BackgroundTransparency = 1}, 0.3)
                 task.wait(0.3)
                 KeyFrame:Destroy()
+                KeyPassed = true -- Libera o uso de Toggle Keybind e Ícone Mobile
+                UIVisible = true
                 MainFrame.Visible = true
                 MainFrame.Size = UDim2.new(0, 0, 0, 0)
                 CreateTween(MainFrame, {Size = UDim2.new(0, 600, 0, 400)}, 0.4)
             else
                 InputStroke.Color = Color3.fromRGB(220, 30, 45)
                 KeyInput.Text = ""
-                KeyInput.PlaceholderText = "Chave Inválida! Tente novamente."
+                KeyInput.PlaceholderText = "Chave Inválida!"
                 task.wait(2)
                 InputStroke.Color = Color3.fromRGB(50, 50, 55)
                 KeyInput.PlaceholderText = "Insira sua chave de acesso aqui..."
