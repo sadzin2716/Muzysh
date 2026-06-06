@@ -1,349 +1,89 @@
---[[
-	MUZYSH UI LIBRARY v3.0 - PREMIUM & MODERN USER INTERFACE
-	Refatoração completa: Arquitetura modular, animações profissionais,
-	responsividade real, cleanup total, theme manager, animation manager.
-	Desenvolvida em Luau com foco em Mobile-First, Performance e Modularidade.
-]]
+-- [[ MUZYSH UI LIBRARY - PREMIUM & MODERN USER INTERFACE ]]
+-- Desenvolvida em Luau com foco em Mobile-First, Performance e Modularidade.
 
 local Muzysh = {}
 Muzysh.__index = Muzysh
 
--- ============================================================================
--- SERVIÇOS
--- ============================================================================
+-- [[ SERVIÇOS DO ROBLOX ]]
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
 local CoreGui = game:GetService("CoreGui")
 local Players = game:GetService("Players")
+
 local LocalPlayer = Players.LocalPlayer
 local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
 
--- ============================================================================
--- ANIMATION MANAGER (GERENCIADOR CENTRAL DE TWEENS)
--- ============================================================================
-local AnimationManager = {}
-AnimationManager.__index = AnimationManager
+-- [[ CONFIGURAÇÕES DE DESIGN (TEMA ESCURO & VERMELHO) ]]
+local Theme = {
+	Background = Color3.fromRGB(15, 15, 15),
+	TopBar = Color3.fromRGB(22, 22, 22),
+	Sidebar = Color3.fromRGB(18, 18, 18),
+	Accent = Color3.fromRGB(215, 35, 35),
+	AccentHover = Color3.fromRGB(255, 50, 50),
+	CardBg = Color3.fromRGB(25, 25, 25),
+	TextColor = Color3.fromRGB(240, 240, 240),
+	TextMuted = Color3.fromRGB(150, 150, 150),
+	Stroke = Color3.fromRGB(40, 40, 40),
+	CornerRadius = UDim.new(0, 12),
+	Font = Enum.Font.GothamMedium,
+	FontBold = Enum.Font.GothamBold
+}
 
-function AnimationManager.new()
-	local self = setmetatable({
-		_activeTweens = {},
-	}, AnimationManager)
-	return self
-end
-
-function AnimationManager:Tween(instance, duration, properties, easing, direction)
-	easing = easing or Enum.EasingStyle.Sine
-	direction = direction or Enum.EasingDirection.Out
-	self:Cancel(instance)
-	local tweenInfo = TweenInfo.new(duration, easing, direction)
+-- [[ FUNÇÕES AUXILIARES ]]
+local function CreateTween(instance, duration, properties)
+	local tweenInfo = TweenInfo.new(duration, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
 	local tween = TweenService:Create(instance, tweenInfo, properties)
 	tween:Play()
-	self._activeTweens[instance] = tween
-	tween.Completed:Connect(function()
-		if self._activeTweens[instance] == tween then
-			self._activeTweens[instance] = nil
-		end
-	end)
 	return tween
 end
 
-function AnimationManager:Cancel(instance)
-	local existing = self._activeTweens[instance]
-	if existing then
-		existing:Cancel()
-		self._activeTweens[instance] = nil
-	end
-end
+local function MakeDraggable(dragFrame, parentFrame)
+	local dragging, dragInput, dragStart, startPos
 
-function AnimationManager:CancelAll()
-	for instance, tween in pairs(self._activeTweens) do
-		tween:Cancel()
-	end
-	self._activeTweens = {}
-end
-
-function AnimationManager:IsAnimating(instance)
-	return self._activeTweens[instance] ~= nil
-end
-
--- ============================================================================
--- THEME MANAGER (GERENCIADOR DE TEMA DINÂMICO)
--- ============================================================================
-local ThemeManager = {}
-ThemeManager.__index = ThemeManager
-
-ThemeManager.BuiltInThemes = {
-	DarkRed = {
-		Name = "DarkRed",
-		Background = Color3.fromRGB(15, 15, 15),
-		TopBar = Color3.fromRGB(22, 22, 22),
-		Sidebar = Color3.fromRGB(18, 18, 18),
-		Accent = Color3.fromRGB(215, 35, 35),
-		AccentHover = Color3.fromRGB(255, 50, 50),
-		CardBg = Color3.fromRGB(25, 25, 25),
-		TextColor = Color3.fromRGB(240, 240, 240),
-		TextMuted = Color3.fromRGB(150, 150, 150),
-		Stroke = Color3.fromRGB(40, 40, 40),
-		CornerRadius = UDim.new(0, 12),
-		Font = Enum.Font.GothamMedium,
-		FontBold = Enum.Font.GothamBold,
-	},
-	DarkBlue = {
-		Name = "DarkBlue",
-		Background = Color3.fromRGB(12, 15, 20),
-		TopBar = Color3.fromRGB(18, 22, 28),
-		Sidebar = Color3.fromRGB(15, 18, 24),
-		Accent = Color3.fromRGB(35, 130, 215),
-		AccentHover = Color3.fromRGB(50, 150, 255),
-		CardBg = Color3.fromRGB(22, 25, 30),
-		TextColor = Color3.fromRGB(240, 240, 245),
-		TextMuted = Color3.fromRGB(140, 145, 155),
-		Stroke = Color3.fromRGB(38, 42, 48),
-		CornerRadius = UDim.new(0, 12),
-		Font = Enum.Font.GothamMedium,
-		FontBold = Enum.Font.GothamBold,
-	},
-	DarkGreen = {
-		Name = "DarkGreen",
-		Background = Color3.fromRGB(12, 20, 15),
-		TopBar = Color3.fromRGB(18, 28, 22),
-		Sidebar = Color3.fromRGB(15, 24, 18),
-		Accent = Color3.fromRGB(35, 215, 100),
-		AccentHover = Color3.fromRGB(50, 255, 130),
-		CardBg = Color3.fromRGB(22, 30, 25),
-		TextColor = Color3.fromRGB(240, 245, 240),
-		TextMuted = Color3.fromRGB(140, 155, 145),
-		Stroke = Color3.fromRGB(38, 48, 42),
-		CornerRadius = UDim.new(0, 12),
-		Font = Enum.Font.GothamMedium,
-		FontBold = Enum.Font.GothamBold,
-	},
-	DarkPurple = {
-		Name = "DarkPurple",
-		Background = Color3.fromRGB(18, 12, 22),
-		TopBar = Color3.fromRGB(25, 18, 30),
-		Sidebar = Color3.fromRGB(20, 14, 26),
-		Accent = Color3.fromRGB(160, 50, 255),
-		AccentHover = Color3.fromRGB(180, 80, 255),
-		CardBg = Color3.fromRGB(28, 22, 32),
-		TextColor = Color3.fromRGB(240, 235, 250),
-		TextMuted = Color3.fromRGB(160, 150, 170),
-		Stroke = Color3.fromRGB(45, 38, 52),
-		CornerRadius = UDim.new(0, 12),
-		Font = Enum.Font.GothamMedium,
-		FontBold = Enum.Font.GothamBold,
-	},
-}
-
-function ThemeManager.new(initialTheme)
-	local self = setmetatable({
-		_currentTheme = nil,
-		_listeners = {},
-		_animManager = nil,
-	}, ThemeManager)
-	local theme = initialTheme or ThemeManager.BuiltInThemes.DarkRed
-	self:SetTheme(theme)
-	return self
-end
-
-function ThemeManager:SetAnimationManager(animManager)
-	self._animManager = animManager
-end
-
-function ThemeManager:OnThemeChanged(callback)
-	table.insert(self._listeners, callback)
-	callback(self._currentTheme)
-end
-
-function ThemeManager:SetTheme(theme)
-	if type(theme) == "string" then
-		theme = ThemeManager.BuiltInThemes[theme]
-		if not theme then
-			warn("ThemeManager: Tema '" .. tostring(theme) .. "' nao encontrado. Usando DarkRed.")
-			theme = ThemeManager.BuiltInThemes.DarkRed
-		end
-	end
-	if not theme then return end
-	self._currentTheme = theme
-	for _, listener in ipairs(self._listeners) do
-		task.spawn(listener, theme)
-	end
-end
-
-function ThemeManager:GetTheme()
-	return self._currentTheme
-end
-
-function ThemeManager:GetThemeCopy()
-	local copy = {}
-	for k, v in pairs(self._currentTheme) do
-		copy[k] = v
-	end
-	return copy
-end
-
--- Instâncias globais
-local GlobalAnimManager = AnimationManager.new()
-local GlobalThemeManager = ThemeManager.new()
-
--- ============================================================================
--- JANITOR (GERENCIADOR DE LIMPEZA)
--- ============================================================================
-local Janitor = {}
-Janitor.__index = Janitor
-
-function Janitor.new()
-	return setmetatable({
-		_connections = {},
-		_instances = {},
-		_functions = {},
-	}, Janitor)
-end
-
-function Janitor:Add(item)
-	if typeof(item) == "RBXScriptConnection" then
-		table.insert(self._connections, item)
-	elseif typeof(item) == "Instance" then
-		table.insert(self._instances, item)
-	elseif type(item) == "function" then
-		table.insert(self._functions, item)
-	end
-	return item
-end
-
-function Janitor:Remove(item)
-	for _, list in ipairs({self._connections, self._instances, self._functions}) do
-		for i, v in ipairs(list) do
-			if v == item then
-				table.remove(list, i)
-				return
-			end
-		end
-	end
-end
-
-function Janitor:Destroy()
-	for _, conn in ipairs(self._connections) do
-		pcall(function() conn:Disconnect() end)
-	end
-	for _, instance in ipairs(self._instances) do
-		pcall(function() instance:Destroy() end)
-	end
-	for _, func in ipairs(self._functions) do
-		pcall(func)
-	end
-	self._connections = {}
-	self._instances = {}
-	self._functions = {}
-end
-
--- ============================================================================
--- DRAG CONTROLLER (SISTEMA DE ARRASTO SEGURO)
--- ============================================================================
-local DragController = {}
-DragController.__index = DragController
-
-function DragController.new(dragFrame, container, janitor)
-	local self = setmetatable({
-		_dragFrame = dragFrame,
-		_container = container,
-		_isDragging = false,
-		_startMousePos = nil,
-		_startContainerPos = nil,
-		_moveConn = nil,
-		_endConn = nil,
-		_janitor = janitor,
-	}, DragController)
-
-	local function startDrag(input)
-		self._isDragging = true
-		self._startMousePos = input.Position
-		self._startContainerPos = container.Position
-
-		self._moveConn = UserInputService.InputChanged:Connect(function(inputObj)
-			if inputObj.UserInputType == Enum.UserInputType.MouseMovement or inputObj.UserInputType == Enum.UserInputType.Touch then
-				local delta = inputObj.Position - self._startMousePos
-				container.Position = UDim2.new(
-					self._startContainerPos.X.Scale,
-					self._startContainerPos.X.Offset + delta.X,
-					self._startContainerPos.Y.Scale,
-					self._startContainerPos.Y.Offset + delta.Y
-				)
-			end
-		end)
-		janitor:Add(self._moveConn)
-
-		self._endConn = UserInputService.InputEnded:Connect(function(inputObj)
-			if inputObj == input then
-				self:StopDrag()
-			end
-		end)
-		janitor:Add(self._endConn)
-	end
-
-	function self:StopDrag()
-		if self._moveConn then
-			self._moveConn:Disconnect()
-			self._janitor:Remove(self._moveConn)
-			self._moveConn = nil
-		end
-		if self._endConn then
-			self._endConn:Disconnect()
-			self._janitor:Remove(self._endConn)
-			self._endConn = nil
-		end
-		self._isDragging = false
-	end
-
-	local beganConn = dragFrame.InputBegan:Connect(function(input)
+	dragFrame.InputBegan:Connect(function(input)
 		if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-			startDrag(input)
+			dragging = true
+			dragStart = input.Position
+			startPos = parentFrame.Position
+
+			input.Changed:Connect(function()
+				if input.UserInputState == Enum.UserInputState.End then
+					dragging = false
+				end
+			end)
 		end
 	end)
-	janitor:Add(beganConn)
 
-	function self:Destroy()
-		self:StopDrag()
-	end
+	dragFrame.InputChanged:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+			dragInput = input
+		end
+	end)
 
-	return self
+	UserInputService.InputChanged:Connect(function(input)
+		if input == dragInput and dragging then
+			local delta = input.Position - dragStart
+			parentFrame.Position = UDim2.new(
+				startPos.X.Scale,
+				startPos.X.Offset + delta.X,
+				startPos.Y.Scale,
+				startPos.Y.Offset + delta.Y
+			)
+		end
+	end)
 end
 
--- ============================================================================
--- FUNÇÃO TWEEN GLOBAL (USA ANIMATION MANAGER)
--- ============================================================================
-local function Tween(instance, duration, properties, easing, direction)
-	return GlobalAnimManager:Tween(instance, duration, properties, easing, direction)
-end
-
--- ============================================================================
--- THEME ATUAL (REFERÊNCIA RÁPIDA SINCRONIZADA)
--- ============================================================================
-local Theme = GlobalThemeManager:GetTheme()
-GlobalThemeManager:OnThemeChanged(function(newTheme)
-	for k, v in pairs(newTheme) do
-		Theme[k] = v
-	end
-end)
-
--- ============================================================================
--- CONSTRUTOR DA WINDOW PRINCIPAL
--- ============================================================================
+-- [[ CONSTRUTOR DA WINDOW PRINCIPAL ]]
 function Muzysh.Init(title)
 	local self = setmetatable({}, Muzysh)
-	local janitor = Janitor.new()
-	self._janitor = janitor
-
-	self._animManager = GlobalAnimManager
-	self._themeManager = GlobalThemeManager
-
-	-- ScreenGui
+	
+	-- Instância base da ScreenGui
 	self.ScreenGui = Instance.new("ScreenGui")
 	self.ScreenGui.Name = "Muzysh_Library"
 	self.ScreenGui.ResetOnSpawn = false
 	self.ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-	janitor:Add(self.ScreenGui)
-
+	
+	-- Proteção básica contra detecção simples (se injetado)
 	if syn and syn.protect_gui then
 		syn.protect_gui(self.ScreenGui)
 		self.ScreenGui.Parent = CoreGui
@@ -351,19 +91,19 @@ function Muzysh.Init(title)
 		self.ScreenGui.Parent = PlayerGui
 	end
 
-	-- Container Principal
+	-- Container Principal (Responsivo para Mobile)
 	self.MainFrame = Instance.new("Frame")
 	self.MainFrame.Name = "MainFrame"
-	self.MainFrame.Size = UDim2.new(0, 580, 0, 360)
+	self.MainFrame.Size = UDim2.new(0, 580, 0, 360) -- Proporções perfeitas para Mobile e PC
 	self.MainFrame.Position = UDim2.new(0.5, -290, 0.5, -180)
 	self.MainFrame.BackgroundColor3 = Theme.Background
 	self.MainFrame.ClipsDescendants = true
 	self.MainFrame.Parent = self.ScreenGui
-	janitor:Add(self.MainFrame)
 
+	-- Guarda o tamanho original para uso na funcionalidade de minimizar
 	self.OriginalSize = UDim2.new(0, 580, 0, 360)
-	self.DesignSize = Vector2.new(580, 360)
 
+	-- Cantos Arredondados e Borda Sutil
 	local corner = Instance.new("UICorner")
 	corner.CornerRadius = Theme.CornerRadius
 	corner.Parent = self.MainFrame
@@ -373,9 +113,10 @@ function Muzysh.Init(title)
 	stroke.Thickness = 1
 	stroke.Parent = self.MainFrame
 
+	-- Responsividade automática via UIScale para telas muito pequenas
 	local uiScale = Instance.new("UIScale")
 	uiScale.Parent = self.MainFrame
-
+	
 	local function UpdateScale()
 		local viewportSize = workspace.CurrentCamera.ViewportSize
 		if viewportSize.X < 600 or viewportSize.Y < 400 then
@@ -385,9 +126,7 @@ function Muzysh.Init(title)
 		end
 	end
 	UpdateScale()
-	local camera = workspace.CurrentCamera
-	local viewportConn = camera:GetPropertyChangedSignal("ViewportSize"):Connect(UpdateScale)
-	janitor:Add(viewportConn)
+	workspace.CurrentCamera:GetPropertyChangedSignal("ViewportSize"):Connect(UpdateScale)
 
 	-- TopBar
 	self.TopBar = Instance.new("Frame")
@@ -395,14 +134,13 @@ function Muzysh.Init(title)
 	self.TopBar.Size = UDim2.new(1, 0, 0, 45)
 	self.TopBar.BackgroundColor3 = Theme.TopBar
 	self.TopBar.Parent = self.MainFrame
+	MakeDraggable(self.TopBar, self.MainFrame)
 
 	local topCorner = Instance.new("UICorner")
 	topCorner.CornerRadius = Theme.CornerRadius
 	topCorner.Parent = self.TopBar
 
-	self._dragController = DragController.new(self.TopBar, self.MainFrame, janitor)
-	janitor:Add(function() self._dragController:Destroy() end)
-
+	-- Título (Logo + Nome)
 	local titleLabel = Instance.new("TextLabel")
 	titleLabel.Size = UDim2.new(0, 200, 1, 0)
 	titleLabel.Position = UDim2.new(0, 15, 0, 0)
@@ -415,7 +153,7 @@ function Muzysh.Init(title)
 	titleLabel.TextXAlignment = Enum.TextXAlignment.Left
 	titleLabel.Parent = self.TopBar
 
-	-- Close Button
+	-- Botão Fechar
 	local closeBtn = Instance.new("TextButton")
 	closeBtn.Size = UDim2.new(0, 35, 0, 35)
 	closeBtn.Position = UDim2.new(1, -40, 0, 5)
@@ -426,44 +164,110 @@ function Muzysh.Init(title)
 	closeBtn.TextSize = 24
 	closeBtn.Parent = self.TopBar
 
-	local closeHoverIn = closeBtn.MouseEnter:Connect(function()
-		Tween(closeBtn, 0.2, {TextColor3 = Theme.Accent})
-	end)
-	local closeHoverOut = closeBtn.MouseLeave:Connect(function()
-		Tween(closeBtn, 0.2, {TextColor3 = Theme.TextMuted})
-	end)
-	janitor:Add(closeHoverIn)
-	janitor:Add(closeHoverOut)
-
+	closeBtn.MouseEnter:Connect(function() CreateTween(closeBtn, 0.2, {TextColor3 = Theme.Accent}) end)
+	closeBtn.MouseLeave:Connect(function() CreateTween(closeBtn, 0.2, {TextColor3 = Theme.TextMuted}) end)
 	closeBtn.MouseButton1Click:Connect(function()
-		self:Destroy()
+		-- Se o botão flutuante existir, remover antes de destruir a GUI
+		if self.FloatingBtn then
+			self.FloatingBtn:Destroy()
+			self.FloatingBtn = nil
+		end
+		CreateTween(self.MainFrame, 0.3, {Size = UDim2.new(0,0,0,0), ImageTransparency = 1})
+		task.wait(0.3)
+		self.ScreenGui:Destroy()
 	end)
 
-	-- Minimize Button
+	-- =================== [ NOVO: BOTÃO MINIMIZAR ] ===================
 	local minimizeBtn = Instance.new("TextButton")
 	minimizeBtn.Size = UDim2.new(0, 35, 0, 35)
-	minimizeBtn.Position = UDim2.new(1, -85, 0, 5)
+	minimizeBtn.Position = UDim2.new(1, -85, 0, 5) -- ao lado do closeBtn
 	minimizeBtn.BackgroundTransparency = 1
-	minimizeBtn.Text = "−"
+	minimizeBtn.Text = "−" -- ou "_", caractere sutil
 	minimizeBtn.TextColor3 = Theme.TextMuted
 	minimizeBtn.Font = Theme.Font
 	minimizeBtn.TextSize = 28
 	minimizeBtn.Parent = self.TopBar
 
-	local minHoverIn = minimizeBtn.MouseEnter:Connect(function()
-		Tween(minimizeBtn, 0.2, {TextColor3 = Theme.Accent})
-	end)
-	local minHoverOut = minimizeBtn.MouseLeave:Connect(function()
-		Tween(minimizeBtn, 0.2, {TextColor3 = Theme.TextMuted})
-	end)
-	janitor:Add(minHoverIn)
-	janitor:Add(minHoverOut)
+	-- Mesmos efeitos de hover/transição do botão fechar
+	minimizeBtn.MouseEnter:Connect(function() CreateTween(minimizeBtn, 0.2, {TextColor3 = Theme.Accent}) end)
+	minimizeBtn.MouseLeave:Connect(function() CreateTween(minimizeBtn, 0.2, {TextColor3 = Theme.TextMuted}) end)
 
-	minimizeBtn.MouseButton1Click:Connect(function()
-		self:Minimize()
-	end)
+	-- Funcionalidade de minimizar
+	local function minimizeWindow()
+		-- Anima o MainFrame para tamanho zero e depois oculta
+		CreateTween(self.MainFrame, 0.3, {Size = UDim2.new(0, 0, 0, 0)})
+		task.wait(0.3)
+		self.MainFrame.Visible = false
 
-	-- Sidebar com ScrollingFrame
+		-- Cria/Exibe o botão flutuante para reabrir
+		if not self.FloatingBtn then
+			local floater = Instance.new("ImageButton")
+			floater.Name = "MinimizeFloater"
+			floater.Size = UDim2.new(0, 56, 0, 56) -- botão discreto
+			floater.Position = UDim2.new(0, 16, 1, -80) -- canto inferior esquerdo
+			floater.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+			floater.BackgroundTransparency = 0.3
+			floater.Image = "rbxassetid://72939763737478"
+			floater.ScaleType = Enum.ScaleType.Fit
+			floater.ImageTransparency = 0.1
+			floater.AutoButtonColor = false
+			floater.Parent = self.ScreenGui
+
+			-- Arredondado (circular)
+			local floaterCorner = Instance.new("UICorner")
+			floaterCorner.CornerRadius = UDim.new(1, 0)
+			floaterCorner.Parent = floater
+
+			-- Efeito de hover sutil
+			floater.MouseEnter:Connect(function()
+				CreateTween(floater, 0.2, {BackgroundTransparency = 0.1})
+			end)
+			floater.MouseLeave:Connect(function()
+				CreateTween(floater, 0.2, {BackgroundTransparency = 0.3})
+			end)
+
+			-- Torna o botão flutuante arrastável (mobile-friendly)
+			local dragStartPos, startBtnPos
+			floater.InputBegan:Connect(function(input)
+				if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+					dragStartPos = input.Position
+					startBtnPos = floater.Position
+					input.Changed:Connect(function()
+						if input.UserInputState == Enum.UserInputState.End then
+							dragStartPos = nil
+						end
+					end)
+				end
+			end)
+			floater.InputChanged:Connect(function(input)
+				if dragStartPos and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+					local delta = input.Position - dragStartPos
+					floater.Position = UDim2.new(
+						startBtnPos.X.Scale,
+						startBtnPos.X.Offset + delta.X,
+						startBtnPos.Y.Scale,
+						startBtnPos.Y.Offset + delta.Y
+					)
+				end
+			end)
+
+			-- Clique para reabrir a janela
+			floater.MouseButton1Click:Connect(function()
+				floater.Visible = false
+				self.MainFrame.Visible = true
+				CreateTween(self.MainFrame, 0.3, {Size = self.OriginalSize})
+			end)
+
+			self.FloatingBtn = floater
+		else
+			self.FloatingBtn.Visible = true
+		end
+	end
+
+	minimizeBtn.MouseButton1Click:Connect(minimizeWindow)
+	-- ================================================================
+
+	-- Sidebar (Menu de Navegação Lateral)
 	self.Sidebar = Instance.new("Frame")
 	self.Sidebar.Name = "Sidebar"
 	self.Sidebar.Size = UDim2.new(0, 130, 1, -45)
@@ -471,29 +275,17 @@ function Muzysh.Init(title)
 	self.Sidebar.BackgroundColor3 = Theme.Sidebar
 	self.Sidebar.Parent = self.MainFrame
 
-	local sidebarScroller = Instance.new("ScrollingFrame")
-	sidebarScroller.Size = UDim2.new(1, 0, 1, 0)
-	sidebarScroller.BackgroundTransparency = 1
-	sidebarScroller.ScrollBarThickness = 0
-	sidebarScroller.CanvasSize = UDim2.new(0, 0, 0, 0)
-	sidebarScroller.Parent = self.Sidebar
-	self.SidebarScroller = sidebarScroller
-
 	local sideLayout = Instance.new("UIListLayout")
 	sideLayout.Padding = UDim.new(0, 5)
 	sideLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
 	sideLayout.SortOrder = Enum.SortOrder.LayoutOrder
-	sideLayout.Parent = sidebarScroller
+	sideLayout.Parent = self.Sidebar
 
 	local sidePadding = Instance.new("UIPadding")
 	sidePadding.PaddingTop = UDim.new(0, 10)
-	sidePadding.Parent = sidebarScroller
+	sidePadding.Parent = self.Sidebar
 
-	sideLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-		sidebarScroller.CanvasSize = UDim2.new(0, 0, 0, sideLayout.AbsoluteContentSize.Y + 20)
-	end)
-
-	-- Page Container
+	-- Container de Páginas (Onde os scripts/elementos vão ficar)
 	self.PageContainer = Instance.new("Frame")
 	self.PageContainer.Name = "PageContainer"
 	self.PageContainer.Size = UDim2.new(1, -140, 1, -55)
@@ -505,182 +297,18 @@ function Muzysh.Init(title)
 	self.Tabs = {}
 	self.FirstPage = nil
 
-	self._pageTransitioning = false
-	self._currentPage = nil
-	self._pageAnimManager = AnimationManager.new()
-
-	self._isMinimized = false
-	self._floaterJanitor = nil
-
-	-- Animação de entrada
+	-- Animação de entrada Premium
 	self.MainFrame.Size = UDim2.new(0, 0, 0, 0)
-	self.MainFrame.BackgroundTransparency = 1
-	Tween(self.MainFrame, 0.4, {Size = self.OriginalSize, BackgroundTransparency = 0}, Enum.EasingStyle.Quart)
-
-	GlobalThemeManager:OnThemeChanged(function(newTheme)
-		self.MainFrame.BackgroundColor3 = newTheme.Background
-		self.TopBar.BackgroundColor3 = newTheme.TopBar
-		self.Sidebar.BackgroundColor3 = newTheme.Sidebar
-	end)
+	CreateTween(self.MainFrame, 0.4, {Size = self.OriginalSize})
 
 	return self
 end
 
--- ============================================================================
--- DESTROY, MINIMIZE, RESTORE, FLOATING BUTTON
--- ============================================================================
-function Muzysh:Destroy()
-	local tweens = TweenService:GetTweens(self.MainFrame)
-	for _, t in ipairs(tweens) do
-		t:Cancel()
-	end
-
-	local closeTween = TweenService:Create(
-		self.MainFrame,
-		TweenInfo.new(0.3, Enum.EasingStyle.Quart, Enum.EasingDirection.In),
-		{
-			Size = UDim2.new(0, 0, 0, 0),
-			BackgroundTransparency = 1,
-			Position = UDim2.new(
-				self.MainFrame.Position.X.Scale,
-				self.MainFrame.Position.X.Offset + self.DesignSize.X * 0.2,
-				self.MainFrame.Position.Y.Scale,
-				self.MainFrame.Position.Y.Offset + self.DesignSize.Y * 0.2
-			)
-		}
-	)
-	closeTween:Play()
-
-	for _, child in ipairs({self.TopBar, self.Sidebar, self.PageContainer}) do
-		if child then
-			local fade = TweenService:Create(
-				child,
-				TweenInfo.new(0.25, Enum.EasingStyle.Quart, Enum.EasingDirection.In),
-				{BackgroundTransparency = 1}
-			)
-			fade:Play()
-		end
-	end
-
-	task.delay(0.4, function()
-		if self._floaterJanitor then
-			self._floaterJanitor:Destroy()
-			self._floaterJanitor = nil
-		end
-		self._janitor:Destroy()
-		if self.ScreenGui then
-			self.ScreenGui:Destroy()
-		end
-	end)
-end
-
-function Muzysh:Minimize()
-	if self._isMinimized then return end
-	self._isMinimized = true
-
-	local shrinkTween = TweenService:Create(
-		self.MainFrame,
-		TweenInfo.new(0.3, Enum.EasingStyle.Quart, Enum.EasingDirection.In),
-		{
-			Size = UDim2.new(0, 0, 0, 0),
-			BackgroundTransparency = 1
-		}
-	)
-	shrinkTween:Play()
-	shrinkTween.Completed:Wait()
-	self.MainFrame.Visible = false
-
-	if not self.FloatingBtn then
-		self:_CreateFloatingButton()
-	else
-		self.FloatingBtn.Visible = true
-	end
-end
-
-function Muzysh:Restore()
-	if not self._isMinimized then return end
-	self._isMinimized = false
-
-	if self.FloatingBtn then
-		self.FloatingBtn.Visible = false
-	end
-	self.MainFrame.Visible = true
-	self.MainFrame.Size = UDim2.new(0, 0, 0, 0)
-	self.MainFrame.BackgroundTransparency = 1
-
-	local restoreTween = TweenService:Create(
-		self.MainFrame,
-		TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.Out),
-		{
-			Size = self.OriginalSize,
-			BackgroundTransparency = 0
-		}
-	)
-	restoreTween:Play()
-end
-
-function Muzysh:_CreateFloatingButton()
-	local floaterJanitor = Janitor.new()
-	self._floaterJanitor = floaterJanitor
-
-	local floater = Instance.new("ImageButton")
-	floater.Name = "MinimizeFloater"
-	floater.Size = UDim2.new(0, 56, 0, 56)
-	floater.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
-	floater.BackgroundTransparency = 0.3
-	floater.Image = "rbxassetid://72939763737478"
-	floater.ScaleType = Enum.ScaleType.Fit
-	floater.ImageTransparency = 0.1
-	floater.AutoButtonColor = false
-	floater.Parent = self.ScreenGui
-	floaterJanitor:Add(floater)
-
-	local floaterCorner = Instance.new("UICorner")
-	floaterCorner.CornerRadius = UDim.new(1, 0)
-	floaterCorner.Parent = floater
-
-	floater.Position = UDim2.new(1, -72, 1, -72)
-
-	local hoverIn = floater.MouseEnter:Connect(function()
-		local t = TweenService:Create(floater, TweenInfo.new(0.2), {BackgroundTransparency = 0.1})
-		t:Play()
-	end)
-	local hoverOut = floater.MouseLeave:Connect(function()
-		local t = TweenService:Create(floater, TweenInfo.new(0.2), {BackgroundTransparency = 0.3})
-		t:Play()
-	end)
-	floaterJanitor:Add(hoverIn)
-	floaterJanitor:Add(hoverOut)
-
-	local floatDrag = DragController.new(floater, floater, floaterJanitor)
-	floaterJanitor:Add(function() floatDrag:Destroy() end)
-
-	local clickConn = floater.MouseButton1Click:Connect(function()
-		self:Restore()
-	end)
-	floaterJanitor:Add(clickConn)
-
-	self.FloatingBtn = floater
-end
-
--- ============================================================================
--- MÉTODOS DE TEMA
--- ============================================================================
-function Muzysh:SetTheme(theme)
-	GlobalThemeManager:SetTheme(theme)
-end
-
-function Muzysh:GetTheme()
-	return GlobalThemeManager:GetTheme()
-end
-
--- ============================================================================
--- CREATE PAGE (COM TRANSIÇÕES E SIDEBAR PREMIUM)
--- ============================================================================
+-- [[ CRIADOR DE ABAS (PÁGINAS) ]]
 function Muzysh:CreatePage(pageName)
 	local pageId = #self.Pages + 1
-	local janitor = self._janitor
 
+	-- Frame da Página de Conteúdo (Scrolling para suportar infinitos componentes)
 	local pageFrame = Instance.new("ScrollingFrame")
 	pageFrame.Name = pageName .. "_Page"
 	pageFrame.Size = UDim2.new(1, 0, 1, 0)
@@ -696,10 +324,9 @@ function Muzysh:CreatePage(pageName)
 	pageLayout.SortOrder = Enum.SortOrder.LayoutOrder
 	pageLayout.Parent = pageFrame
 
-	local contentSizeConn = pageLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+	pageLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
 		pageFrame.CanvasSize = UDim2.new(0, 0, 0, pageLayout.AbsoluteContentSize.Y + 15)
 	end)
-	janitor:Add(contentSizeConn)
 
 	local pagePadding = Instance.new("UIPadding")
 	pagePadding.PaddingLeft = UDim.new(0, 5)
@@ -707,7 +334,7 @@ function Muzysh:CreatePage(pageName)
 	pagePadding.PaddingTop = UDim.new(0, 5)
 	pagePadding.Parent = pageFrame
 
-	-- Tab na Sidebar
+	-- Botão da Aba na Sidebar
 	local tabBtn = Instance.new("TextButton")
 	tabBtn.Name = pageName .. "_Tab"
 	tabBtn.Size = UDim2.new(0, 115, 0, 35)
@@ -718,12 +345,13 @@ function Muzysh:CreatePage(pageName)
 	tabBtn.Font = Theme.Font
 	tabBtn.TextSize = 14
 	tabBtn.TextXAlignment = Enum.TextXAlignment.Left
-	tabBtn.Parent = self.SidebarScroller
+	tabBtn.Parent = self.Sidebar
 
 	local tabCorner = Instance.new("UICorner")
 	tabCorner.CornerRadius = UDim.new(0, 6)
 	tabCorner.Parent = tabBtn
 
+	-- Indicador Lateral Ativo (Visual Premium)
 	local indicator = Instance.new("Frame")
 	indicator.Size = UDim2.new(0, 3, 0, 0)
 	indicator.Position = UDim2.new(0, 0, 0.5, 0)
@@ -731,87 +359,31 @@ function Muzysh:CreatePage(pageName)
 	indicator.BorderSizePixel = 0
 	indicator.Parent = tabBtn
 
-	local tabHoverIn = tabBtn.MouseEnter:Connect(function()
-		if self._currentPage ~= pageFrame then
-			Tween(tabBtn, 0.15, {BackgroundTransparency = 0.9, BackgroundColor3 = Color3.fromRGB(60, 60, 60)})
-			Tween(tabBtn, 0.15, {TextColor3 = Theme.TextColor})
+	-- Mecânica de Alternância de Abas
+	local function SelectPage()
+		for _, p in pairs(self.Pages) do p.Visible = false end
+		for t, ind in pairs(self.Tabs) do 
+			CreateTween(t, 0.2, {TextColor3 = Theme.TextMuted, BackgroundTransparency = 1})
+			CreateTween(ind, 0.2, {Size = UDim2.new(0, 3, 0, 0), Position = UDim2.new(0, 0, 0.5, 0)})
 		end
-	end)
-	local tabHoverOut = tabBtn.MouseLeave:Connect(function()
-		if self._currentPage ~= pageFrame then
-			Tween(tabBtn, 0.15, {BackgroundTransparency = 1, BackgroundColor3 = Color3.fromRGB(30, 30, 30)})
-			Tween(tabBtn, 0.15, {TextColor3 = Theme.TextMuted})
-		end
-	end)
-	janitor:Add(tabHoverIn)
-	janitor:Add(tabHoverOut)
-
-	local function selectPage()
-		if self._pageTransitioning then return end
-		self._pageTransitioning = true
-
-		local previousPage = self._currentPage
-
-		if previousPage then
-			self._pageAnimManager:Tween(previousPage, 0.15, {BackgroundTransparency = 1}, Enum.EasingStyle.Quart)
-			for _, child in ipairs(previousPage:GetChildren()) do
-				if child:IsA("GuiObject") then
-					self._pageAnimManager:Tween(child, 0.1, {BackgroundTransparency = 1})
-				end
-			end
-			task.delay(0.15, function()
-				previousPage.Visible = false
-			end)
-		end
-
-		for t, ind in pairs(self.Tabs) do
-			Tween(t, 0.2, {TextColor3 = Theme.TextMuted, BackgroundTransparency = 1})
-			Tween(ind, 0.2, {Size = UDim2.new(0, 3, 0, 0), Position = UDim2.new(0, 0, 0.5, 0), BackgroundTransparency = 1})
-		end
-
 		pageFrame.Visible = true
-		pageFrame.BackgroundTransparency = 1
-		self._currentPage = pageFrame
-
-		self._pageAnimManager:Tween(pageFrame, 0.2, {BackgroundTransparency = 0}, Enum.EasingStyle.Quart)
-
-		task.delay(0.1, function()
-			if self._currentPage ~= pageFrame then return end
-			for _, child in ipairs(pageFrame:GetChildren()) do
-				if child:IsA("Frame") and child.Name ~= "UIListLayout" and child.Name ~= "UIPadding" then
-					child.BackgroundTransparency = 1
-					self._pageAnimManager:Tween(child, 0.2, {BackgroundTransparency = 0})
-				end
-			end
-			self._pageTransitioning = false
-		end)
-
-		Tween(tabBtn, 0.2, {TextColor3 = Theme.TextColor, BackgroundTransparency = 0.8, BackgroundColor3 = Theme.Accent})
-		Tween(indicator, 0.25, {
-			Size = UDim2.new(0, 4, 0, 20),
-			Position = UDim2.new(0, 0, 0.2, 0),
-			BackgroundTransparency = 0,
-			BackgroundColor3 = Theme.Accent
-		})
+		CreateTween(tabBtn, 0.2, {TextColor3 = Theme.TextColor, BackgroundTransparency = 0.8})
+		CreateTween(indicator, 0.2, {Size = UDim2.new(0, 3, 0, 18), Position = UDim2.new(0, 0, 0.25, 0)})
 	end
 
-	local tabClickConn = tabBtn.MouseButton1Click:Connect(selectPage)
-	janitor:Add(tabClickConn)
-
+	tabBtn.MouseButton1Click:Connect(SelectPage)
 	self.Pages[pageId] = pageFrame
 	self.Tabs[tabBtn] = indicator
 
 	if not self.FirstPage then
-		self.FirstPage = selectPage
-		task.spawn(selectPage)
+		self.FirstPage = SelectPage
+		task.spawn(SelectPage)
 	end
 
-	-- ========================================================================
-	-- ELEMENTOS DA PÁGINA
-	-- ========================================================================
+	-- Métodos internos para adicionar componentes dentro desta página específica
 	local elements = {}
 
-	-- SECTION
+	-- [ COMPONENTE: SEPARADOR / TÍTULO ]
 	function elements:CreateSection(titleText)
 		local sectionFrame = Instance.new("Frame")
 		sectionFrame.Size = UDim2.new(1, 0, 0, 25)
@@ -827,20 +399,16 @@ function Muzysh:CreatePage(pageName)
 		label.TextXAlignment = Enum.TextXAlignment.Left
 		label.BackgroundTransparency = 1
 		label.Parent = sectionFrame
-
-		return { Destroy = function() sectionFrame:Destroy() end }
 	end
 
-	-- BUTTON
+	-- [ COMPONENTE: BOTÃO PREMIUM ]
 	function elements:CreateButton(btnText, callback)
 		callback = callback or function() end
-		local compJanitor = Janitor.new()
-
+		
 		local btnFrame = Instance.new("Frame")
-		btnFrame.Size = UDim2.new(1, 0, 0, 42)
+		btnFrame.Size = UDim2.new(1, 0, 0, 40)
 		btnFrame.BackgroundColor3 = Theme.CardBg
 		btnFrame.Parent = pageFrame
-		compJanitor:Add(btnFrame)
 
 		local btnCorner = Instance.new("UICorner")
 		btnCorner.CornerRadius = UDim.new(0, 8)
@@ -854,126 +422,39 @@ function Muzysh:CreatePage(pageName)
 		realBtn.TextColor3 = Theme.TextColor
 		realBtn.Font = Theme.Font
 		realBtn.TextSize = 14
-		realBtn.AutoButtonColor = false
 		realBtn.Parent = btnFrame
-		compJanitor:Add(realBtn)
 
 		local rbCorner = Instance.new("UICorner")
 		rbCorner.CornerRadius = UDim.new(0, 6)
 		rbCorner.Parent = realBtn
 
-		local ripple = Instance.new("Frame")
-		ripple.Size = UDim2.new(0, 0, 0, 0)
-		ripple.Position = UDim2.new(0.5, 0, 0.5, 0)
-		ripple.AnchorPoint = Vector2.new(0.5, 0.5)
-		ripple.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-		ripple.BackgroundTransparency = 0.7
-		ripple.BorderSizePixel = 0
-		ripple.ClipsDescendants = true
-		ripple.ZIndex = 2
-		ripple.Parent = realBtn
-
-		local rippleCorner = Instance.new("UICorner")
-		rippleCorner.CornerRadius = UDim.new(1, 0)
-		rippleCorner.Parent = ripple
-
-		local defaultSize = UDim2.new(1, -10, 1, -10)
-		local pressedSize = UDim2.new(1, -14, 1, -14)
-		local defaultPos = UDim2.new(0, 5, 0, 5)
-		local pressedPos = UDim2.new(0, 7, 0, 7)
-
-		local isPressed = false
-		local isHovering = false
-
-		local function playRipple(inputPosition)
-			local relativePos = inputPosition - realBtn.AbsolutePosition
-			local maxRadius = math.max(realBtn.AbsoluteSize.X, realBtn.AbsoluteSize.Y) * 1.5
-			ripple.Position = UDim2.new(0, relativePos.X, 0, relativePos.Y)
-			ripple.Size = UDim2.new(0, 0, 0, 0)
-			ripple.BackgroundTransparency = 0.7
-			local rippleTween = TweenService:Create(
-				ripple,
-				TweenInfo.new(0.5, Enum.EasingStyle.Quart, Enum.EasingDirection.Out),
-				{ Size = UDim2.new(0, maxRadius, 0, maxRadius), BackgroundTransparency = 1 }
-			)
-			rippleTween:Play()
-		end
-
-		local hoverIn = realBtn.MouseEnter:Connect(function()
-			isHovering = true
-			Tween(realBtn, 0.2, {BackgroundColor3 = Theme.AccentHover})
+		-- Efeito de Hover e Clique Responsivo (Scale Effect)
+		realBtn.MouseEnter:Connect(function() CreateTween(realBtn, 0.2, {BackgroundColor3 = Theme.AccentHover}) end)
+		realBtn.MouseLeave:Connect(function() CreateTween(realBtn, 0.2, {BackgroundColor3 = Theme.Accent}) end)
+		
+		realBtn.MouseButton1Down:Connect(function()
+			CreateTween(realBtn, 0.1, {Size = UDim2.new(1, -14, 1, -14), Position = UDim2.new(0, 7, 0, 7)})
 		end)
-		compJanitor:Add(hoverIn)
-
-		local hoverOut = realBtn.MouseLeave:Connect(function()
-			isHovering = false
-			if not isPressed then
-				Tween(realBtn, 0.2, {BackgroundColor3 = Theme.Accent})
-			end
+		
+		realBtn.MouseButton1Up:Connect(function()
+			CreateTween(realBtn, 0.1, {Size = UDim2.new(1, -10, 1, -10), Position = UDim2.new(0, 5, 0, 5)})
+			callback()
 		end)
-		compJanitor:Add(hoverOut)
-
-		local downConn = realBtn.MouseButton1Down:Connect(function()
-			isPressed = true
-			Tween(realBtn, 0.1, {Size = pressedSize, Position = pressedPos}, Enum.EasingStyle.Quad)
-			Tween(realBtn, 0.1, {BackgroundColor3 = Color3.fromRGB(180, 25, 25)})
-		end)
-		compJanitor:Add(downConn)
-
-		local upConn = realBtn.MouseButton1Up:Connect(function()
-			if isPressed then
-				isPressed = false
-				Tween(realBtn, 0.15, {Size = defaultSize, Position = defaultPos}, Enum.EasingStyle.Back)
-				if isHovering then
-					Tween(realBtn, 0.15, {BackgroundColor3 = Theme.AccentHover})
-				else
-					Tween(realBtn, 0.15, {BackgroundColor3 = Theme.Accent})
-				end
-				local mousePos = UserInputService:GetMouseLocation()
-				playRipple(mousePos)
-				callback()
-			end
-		end)
-		compJanitor:Add(upConn)
-
-		local leaveWhilePressed = realBtn.MouseLeave:Connect(function()
-			if isPressed then
-				isPressed = false
-				Tween(realBtn, 0.15, {Size = defaultSize, Position = defaultPos}, Enum.EasingStyle.Back)
-				Tween(realBtn, 0.15, {BackgroundColor3 = Theme.Accent})
-			end
-		end)
-		compJanitor:Add(leaveWhilePressed)
-
-		return {
-			Destroy = function() compJanitor:Destroy() end,
-			SetText = function(newText) realBtn.Text = newText end,
-			SetCallback = function(newCallback) callback = newCallback or function() end end,
-		}
 	end
 
-	-- TOGGLE
+	-- [ COMPONENTE: TOGGLE (CHAVE) ]
 	function elements:CreateToggle(toggleText, default, callback)
 		callback = callback or function() end
 		local state = default or false
-		local compJanitor = Janitor.new()
 
 		local toggleFrame = Instance.new("Frame")
-		toggleFrame.Size = UDim2.new(1, 0, 0, 42)
+		toggleFrame.Size = UDim2.new(1, 0, 0, 40)
 		toggleFrame.BackgroundColor3 = Theme.CardBg
 		toggleFrame.Parent = pageFrame
-		compJanitor:Add(toggleFrame)
 
 		local tfCorner = Instance.new("UICorner")
 		tfCorner.CornerRadius = UDim.new(0, 8)
 		tfCorner.Parent = toggleFrame
-
-		local clickArea = Instance.new("TextButton")
-		clickArea.Size = UDim2.new(1, 0, 1, 0)
-		clickArea.BackgroundTransparency = 1
-		clickArea.Text = ""
-		clickArea.Parent = toggleFrame
-		compJanitor:Add(clickArea)
 
 		local label = Instance.new("TextLabel")
 		label.Size = UDim2.new(0.7, 0, 1, 0)
@@ -986,19 +467,22 @@ function Muzysh:CreatePage(pageName)
 		label.TextXAlignment = Enum.TextXAlignment.Left
 		label.Parent = toggleFrame
 
-		local switch = Instance.new("Frame")
-		switch.Size = UDim2.new(0, 46, 0, 24)
-		switch.Position = UDim2.new(1, -58, 0.5, -12)
-		switch.BackgroundColor3 = state and Theme.Accent or Color3.fromRGB(50, 50, 50)
+		-- Switch externo
+		local switch = Instance.new("TextButton")
+		switch.Size = UDim2.new(0, 42, 0, 22)
+		switch.Position = UDim2.new(1, -54, 0.5, -11)
+		switch.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+		switch.Text = ""
 		switch.Parent = toggleFrame
 
 		local swCorner = Instance.new("UICorner")
 		swCorner.CornerRadius = UDim.new(1, 0)
 		swCorner.Parent = switch
 
+		-- Slider interno
 		local sliderCircle = Instance.new("Frame")
-		sliderCircle.Size = UDim2.new(0, 18, 0, 18)
-		sliderCircle.Position = state and UDim2.new(1, -22, 0.5, -9) or UDim2.new(0, 4, 0.5, -9)
+		sliderCircle.Size = UDim2.new(0, 16, 0, 16)
+		sliderCircle.Position = state and UDim2.new(1, -20, 0.5, -8) or UDim2.new(0, 4, 0.5, -8)
 		sliderCircle.BackgroundColor3 = Theme.TextColor
 		sliderCircle.Parent = switch
 
@@ -1006,93 +490,38 @@ function Muzysh:CreatePage(pageName)
 		scCorner.CornerRadius = UDim.new(1, 0)
 		scCorner.Parent = sliderCircle
 
-		local stateIndicator = Instance.new("TextLabel")
-		stateIndicator.Size = UDim2.new(0, 20, 1, 0)
-		stateIndicator.Position = state and UDim2.new(0, 6, 0, 0) or UDim2.new(1, -26, 0, 0)
-		stateIndicator.BackgroundTransparency = 1
-		stateIndicator.Text = state and "ON" or "OFF"
-		stateIndicator.TextColor3 = state and Theme.TextColor or Color3.fromRGB(100, 100, 100)
-		stateIndicator.Font = Theme.Font
-		stateIndicator.TextSize = 10
-		stateIndicator.TextXAlignment = Enum.TextXAlignment.Center
-		stateIndicator.Parent = switch
+		if state then switch.BackgroundColor3 = Theme.Accent end
 
-		local function updateVisual(animate)
-			if state then
-				if animate then
-					Tween(switch, 0.25, {BackgroundColor3 = Theme.Accent})
-					Tween(sliderCircle, 0.25, {Position = UDim2.new(1, -22, 0.5, -9)}, Enum.EasingStyle.Back)
-					Tween(stateIndicator, 0.2, {TextColor3 = Theme.TextColor, Position = UDim2.new(0, 6, 0, 0)})
-				else
-					switch.BackgroundColor3 = Theme.Accent
-					sliderCircle.Position = UDim2.new(1, -22, 0.5, -9)
-					stateIndicator.TextColor3 = Theme.TextColor
-					stateIndicator.Position = UDim2.new(0, 6, 0, 0)
-				end
-				stateIndicator.Text = "ON"
-				Tween(label, 0.2, {TextColor3 = Theme.TextColor})
-			else
-				if animate then
-					Tween(switch, 0.25, {BackgroundColor3 = Color3.fromRGB(50, 50, 50)})
-					Tween(sliderCircle, 0.25, {Position = UDim2.new(0, 4, 0.5, -9)}, Enum.EasingStyle.Back)
-					Tween(stateIndicator, 0.2, {TextColor3 = Color3.fromRGB(100, 100, 100), Position = UDim2.new(1, -26, 0, 0)})
-				else
-					switch.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-					sliderCircle.Position = UDim2.new(0, 4, 0.5, -9)
-					stateIndicator.TextColor3 = Color3.fromRGB(100, 100, 100)
-					stateIndicator.Position = UDim2.new(1, -26, 0, 0)
-				end
-				stateIndicator.Text = "OFF"
-				Tween(label, 0.2, {TextColor3 = Theme.TextMuted})
-			end
-		end
-
-		updateVisual(false)
-
-		local clickConn = clickArea.MouseButton1Click:Connect(function()
+		switch.MouseButton1Click:Connect(function()
 			state = not state
-			updateVisual(true)
+			if state then
+				CreateTween(switch, 0.2, {BackgroundColor3 = Theme.Accent})
+				CreateTween(sliderCircle, 0.2, {Position = UDim2.new(1, -20, 0.5, -8)})
+			else
+				CreateTween(switch, 0.2, {BackgroundColor3 = Color3.fromRGB(40, 40, 40)})
+				CreateTween(sliderCircle, 0.2, {Position = UDim2.new(0, 4, 0.5, -8)})
+			end
 			callback(state)
 		end)
-		compJanitor:Add(clickConn)
-
-		local switchHoverIn = switch.MouseEnter:Connect(function()
-			Tween(switch, 0.15, {Size = UDim2.new(0, 50, 0, 26)})
-			Tween(switch, 0.15, {Position = UDim2.new(1, -62, 0.5, -13)})
-		end)
-		local switchHoverOut = switch.MouseLeave:Connect(function()
-			Tween(switch, 0.15, {Size = UDim2.new(0, 46, 0, 24)})
-			Tween(switch, 0.15, {Position = UDim2.new(1, -58, 0.5, -12)})
-		end)
-		compJanitor:Add(switchHoverIn)
-		compJanitor:Add(switchHoverOut)
-
-		return {
-			Destroy = function() compJanitor:Destroy() end,
-			SetValue = function(value) if value ~= state then state = value; updateVisual(true) end end,
-			GetValue = function() return state end,
-		}
 	end
 
-	-- SLIDER
+	-- [ COMPONENTE: SLIDER ]
 	function elements:CreateSlider(sliderText, min, max, default, callback)
 		callback = callback or function() end
 		local value = default or min
-		local compJanitor = Janitor.new()
 
 		local sliderFrame = Instance.new("Frame")
-		sliderFrame.Size = UDim2.new(1, 0, 0, 55)
+		sliderFrame.Size = UDim2.new(1, 0, 0, 50)
 		sliderFrame.BackgroundColor3 = Theme.CardBg
 		sliderFrame.Parent = pageFrame
-		compJanitor:Add(sliderFrame)
 
 		local sfCorner = Instance.new("UICorner")
 		sfCorner.CornerRadius = UDim.new(0, 8)
 		sfCorner.Parent = sliderFrame
 
 		local label = Instance.new("TextLabel")
-		label.Size = UDim2.new(0.6, 0, 0, 20)
-		label.Position = UDim2.new(0, 12, 0, 4)
+		label.Size = UDim2.new(0.6, 0, 0, 25)
+		label.Position = UDim2.new(0, 12, 0, 2)
 		label.BackgroundTransparency = 1
 		label.Text = sliderText
 		label.TextColor3 = Theme.TextColor
@@ -1102,36 +531,30 @@ function Muzysh:CreatePage(pageName)
 		label.Parent = sliderFrame
 
 		local valLabel = Instance.new("TextLabel")
-		valLabel.Size = UDim2.new(0, 50, 0, 20)
-		valLabel.Position = UDim2.new(1, -62, 0, 4)
+		valLabel.Size = UDim2.new(0.3, 0, 0, 25)
+		valLabel.Position = UDim2.new(1, -112, 0, 2)
 		valLabel.BackgroundTransparency = 1
 		valLabel.Text = tostring(value)
 		valLabel.TextColor3 = Theme.Accent
-		valLabel.Font = Theme.FontBold
+		valLabel.Font = Theme.Font
 		valLabel.TextSize = 14
 		valLabel.TextXAlignment = Enum.TextXAlignment.Right
 		valLabel.Parent = sliderFrame
 
-		local trackHitbox = Instance.new("TextButton")
-		trackHitbox.Size = UDim2.new(1, -24, 0, 30)
-		trackHitbox.Position = UDim2.new(0, 12, 0, 26)
-		trackHitbox.BackgroundTransparency = 1
-		trackHitbox.Text = ""
-		trackHitbox.Parent = sliderFrame
-
-		local track = Instance.new("Frame")
-		track.Size = UDim2.new(1, 0, 0, 8)
-		track.Position = UDim2.new(0, 0, 0.5, -4)
+		-- Trilha do Slider
+		local track = Instance.new("TextButton")
+		track.Size = UDim2.new(1, -24, 0, 6)
+		track.Position = UDim2.new(0, 12, 0, 34)
 		track.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
-		track.Parent = trackHitbox
+		track.Text = ""
+		track.Parent = sliderFrame
 
 		local trCorner = Instance.new("UICorner")
 		trCorner.CornerRadius = UDim.new(1, 0)
 		trCorner.Parent = track
 
 		local fill = Instance.new("Frame")
-		local initialPercent = (value - min) / (max - min)
-		fill.Size = UDim2.new(initialPercent, 0, 1, 0)
+		fill.Size = UDim2.new((value - min) / (max - min), 0, 1, 0)
 		fill.BackgroundColor3 = Theme.Accent
 		fill.BorderSizePixel = 0
 		fill.Parent = track
@@ -1140,173 +563,65 @@ function Muzysh:CreatePage(pageName)
 		fillCorner.CornerRadius = UDim.new(1, 0)
 		fillCorner.Parent = fill
 
-		local snap = Instance.new("Frame")
-		snap.Size = UDim2.new(0, 22, 0, 22)
-		snap.Position = UDim2.new(initialPercent, -11, 0.5, -11)
+		-- Lógica de Arrastar com Mouse/Touch
+		local snap = Instance.new("Frame") -- Knob oculto/área ampliada para toque fácil
+		snap.Size = UDim2.new(0, 16, 0, 16)
+		snap.Position = UDim2.new((value - min) / (max - min), -8, 0.5, -8)
 		snap.BackgroundColor3 = Theme.TextColor
-		snap.BorderSizePixel = 0
 		snap.Parent = track
 
 		local snCorner = Instance.new("UICorner")
 		snCorner.CornerRadius = UDim.new(1, 0)
 		snCorner.Parent = snap
 
-		local snapShadow = Instance.new("Frame")
-		snapShadow.Size = UDim2.new(1, 4, 1, 4)
-		snapShadow.Position = UDim2.new(0.5, -13, 0.5, -13)
-		snapShadow.AnchorPoint = Vector2.new(0.5, 0.5)
-		snapShadow.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-		snapShadow.BackgroundTransparency = 0.6
-		snapShadow.BorderSizePixel = 0
-		snapShadow.ZIndex = -1
-		snapShadow.Parent = snap
-
-		local snShadowCorner = Instance.new("UICorner")
-		snShadowCorner.CornerRadius = UDim.new(1, 0)
-		snShadowCorner.Parent = snapShadow
-
-		local tooltip = Instance.new("TextLabel")
-		tooltip.Size = UDim2.new(0, 60, 0, 24)
-		tooltip.Position = UDim2.new(0, -30, 0, -30)
-		tooltip.AnchorPoint = Vector2.new(0.5, 0.5)
-		tooltip.BackgroundColor3 = Theme.Accent
-		tooltip.Text = tostring(value)
-		tooltip.TextColor3 = Theme.TextColor
-		tooltip.Font = Theme.FontBold
-		tooltip.TextSize = 13
-		tooltip.Visible = false
-		tooltip.ZIndex = 10
-		tooltip.Parent = snap
-
-		local ttCorner = Instance.new("UICorner")
-		ttCorner.CornerRadius = UDim.new(0, 6)
-		ttCorner.Parent = tooltip
-
 		local sliding = false
-		local moveConn = nil
-		local endConn = nil
 
-		local function updateKnobPosition(percent)
-			fill.Size = UDim2.new(percent, 0, 1, 0)
-			snap.Position = UDim2.new(percent, -11, 0.5, -11)
-			tooltip.Position = UDim2.new(0, -30, 0, -30)
-		end
-
-		local function updateValue(percent)
-			value = math.floor(min + (max - min) * percent)
+		local function UpdateSlider(input)
+			local percentage = math.clamp((input.Position.X - track.AbsolutePosition.X) / track.AbsoluteWidth, 0, 1)
+			value = math.floor(min + (max - min) * percentage)
 			valLabel.Text = tostring(value)
-			tooltip.Text = tostring(value)
-			Tween(valLabel, 0.15, {Size = UDim2.new(0, 56, 0, 22)}, Enum.EasingStyle.Back)
-			task.delay(0.15, function()
-				if valLabel then
-					Tween(valLabel, 0.15, {Size = UDim2.new(0, 50, 0, 20)}, Enum.EasingStyle.Back)
-				end
-			end)
+			CreateTween(fill, 0.1, {Size = UDim2.new(percentage, 0, 1, 0)})
+			CreateTween(snap, 0.1, {Position = UDim2.new(percentage, -8, 0.5, -8)})
 			callback(value)
 		end
 
-		local function updateFromInput(input)
-			local trackAbsolute = track.AbsolutePosition
-			local trackWidth = track.AbsoluteSize.X
-			local relativeX = math.clamp((input.Position.X - trackAbsolute.X) / trackWidth, 0, 1)
-			updateKnobPosition(relativeX)
-			updateValue(relativeX)
-		end
-
-		local function startDrag(input)
-			sliding = true
-			tooltip.Visible = true
-			updateFromInput(input)
-			moveConn = UserInputService.InputChanged:Connect(function(inputObj)
-				if inputObj.UserInputType == Enum.UserInputType.MouseMovement or inputObj.UserInputType == Enum.UserInputType.Touch then
-					updateFromInput(inputObj)
-				end
-			end)
-			compJanitor:Add(moveConn)
-			endConn = UserInputService.InputEnded:Connect(function(inputObj)
-				if inputObj.UserInputType == Enum.UserInputType.MouseButton1 or inputObj.UserInputType == Enum.UserInputType.Touch then
-					stopDrag()
-				end
-			end)
-			compJanitor:Add(endConn)
-		end
-
-		local function stopDrag()
-			sliding = false
-			tooltip.Visible = false
-			if moveConn then
-				moveConn:Disconnect()
-				compJanitor:Remove(moveConn)
-				moveConn = nil
-			end
-			if endConn then
-				endConn:Disconnect()
-				compJanitor:Remove(endConn)
-				endConn = nil
-			end
-			Tween(snap, 0.15, {Size = UDim2.new(0, 22, 0, 22)}, Enum.EasingStyle.Back)
-		end
-
-		local beganConn = trackHitbox.InputBegan:Connect(function(input)
+		track.InputBegan:Connect(function(input)
 			if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-				startDrag(input)
-				Tween(snap, 0.1, {Size = UDim2.new(0, 26, 0, 26)}, Enum.EasingStyle.Quad)
+				sliding = true
+				UpdateSlider(input)
 			end
 		end)
-		compJanitor:Add(beganConn)
 
-		local scrollConn = trackHitbox.MouseWheelForward:Connect(function()
-			local newValue = math.clamp(value + 1, min, max)
-			value = newValue
-			local percent = (value - min) / (max - min)
-			updateKnobPosition(percent)
-			valLabel.Text = tostring(value)
-			callback(value)
+		UserInputService.InputChanged:Connect(function(input)
+			if sliding and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+				UpdateSlider(input)
+			end
 		end)
-		compJanitor:Add(scrollConn)
 
-		local scrollBackConn = trackHitbox.MouseWheelBackward:Connect(function()
-			local newValue = math.clamp(value - 1, min, max)
-			value = newValue
-			local percent = (value - min) / (max - min)
-			updateKnobPosition(percent)
-			valLabel.Text = tostring(value)
-			callback(value)
+		UserInputService.InputEnded:Connect(function(input)
+			if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+				sliding = false
+			end
 		end)
-		compJanitor:Add(scrollBackConn)
-
-		return {
-			Destroy = function() stopDrag(); compJanitor:Destroy() end,
-			SetValue = function(val)
-				value = math.clamp(val, min, max)
-				local percent = (value - min) / (max - min)
-				updateKnobPosition(percent)
-				valLabel.Text = tostring(value)
-			end,
-			GetValue = function() return value end,
-		}
 	end
 
-	-- DROPDOWN
+	-- [ COMPONENTE: DROPDOWN ]
 	function elements:CreateDropdown(dropText, list, callback)
 		callback = callback or function() end
-		local compJanitor = Janitor.new()
 		local isOpened = false
-		local selectedItem = nil
 
 		local dropFrame = Instance.new("Frame")
-		dropFrame.Size = UDim2.new(1, 0, 0, 44)
+		dropFrame.Size = UDim2.new(1, 0, 0, 40)
 		dropFrame.BackgroundColor3 = Theme.CardBg
 		dropFrame.ClipsDescendants = true
 		dropFrame.Parent = pageFrame
-		compJanitor:Add(dropFrame)
 
 		local dfCorner = Instance.new("UICorner")
 		dfCorner.CornerRadius = UDim.new(0, 8)
 		dfCorner.Parent = dropFrame
 
 		local mainBtn = Instance.new("TextButton")
-		mainBtn.Size = UDim2.new(1, 0, 0, 44)
+		mainBtn.Size = UDim2.new(1, 0, 0, 40)
 		mainBtn.BackgroundTransparency = 1
 		mainBtn.Text = "  " .. dropText
 		mainBtn.TextColor3 = Theme.TextColor
@@ -1316,7 +631,7 @@ function Muzysh:CreatePage(pageName)
 		mainBtn.Parent = dropFrame
 
 		local arrow = Instance.new("TextLabel")
-		arrow.Size = UDim2.new(0, 40, 0, 44)
+		arrow.Size = UDim2.new(0, 40, 0, 40)
 		arrow.Position = UDim2.new(1, -40, 0, 0)
 		arrow.BackgroundTransparency = 1
 		arrow.Text = "▼"
@@ -1325,197 +640,71 @@ function Muzysh:CreatePage(pageName)
 		arrow.TextSize = 12
 		arrow.Parent = mainBtn
 
-		local listScroller = Instance.new("ScrollingFrame")
-		listScroller.Size = UDim2.new(1, -16, 1, -50)
-		listScroller.Position = UDim2.new(0, 8, 0, 46)
-		listScroller.BackgroundTransparency = 1
-		listScroller.ScrollBarThickness = 2
-		listScroller.ScrollBarImageColor3 = Theme.Accent
-		listScroller.CanvasSize = UDim2.new(0, 0, 0, 0)
-		listScroller.Visible = false
-		listScroller.Parent = dropFrame
+		-- Lista Container
+		local listHolder = Instance.new("Frame")
+		listHolder.Size = UDim2.new(1, -20, 1, -45)
+		listHolder.Position = UDim2.new(0, 10, 0, 42)
+		listHolder.BackgroundTransparency = 1
+		listHolder.Parent = dropFrame
 
 		local listLayout = Instance.new("UIListLayout")
 		listLayout.Padding = UDim.new(0, 4)
-		listLayout.SortOrder = Enum.SortOrder.LayoutOrder
-		listLayout.Parent = listScroller
+		listLayout.Parent = listHolder
 
-		listLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-			listScroller.CanvasSize = UDim2.new(0, 0, 0, listLayout.AbsoluteContentSize.Y + 8)
-		end)
-
-		local itemFrames = {}
-		local itemHighlights = {}
-
-		for idx, opt in ipairs(list) do
+		-- População dos botões da lista
+		for _, opt in pairs(list) do
 			local optBtn = Instance.new("TextButton")
-			optBtn.Size = UDim2.new(1, 0, 0, 32)
+			optBtn.Size = UDim2.new(1, 0, 0, 30)
 			optBtn.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
-			optBtn.BackgroundTransparency = 1
 			optBtn.Text = opt
 			optBtn.TextColor3 = Theme.TextMuted
 			optBtn.Font = Theme.Font
 			optBtn.TextSize = 13
-			optBtn.Parent = listScroller
+			optBtn.Parent = listHolder
 
 			local obc = Instance.new("UICorner")
 			obc.CornerRadius = UDim.new(0, 6)
 			obc.Parent = optBtn
 
-			local highlight = Instance.new("Frame")
-			highlight.Size = UDim2.new(0, 3, 0, 20)
-			highlight.Position = UDim2.new(0, 0, 0.5, -10)
-			highlight.BackgroundColor3 = Theme.Accent
-			highlight.BorderSizePixel = 0
-			highlight.BackgroundTransparency = 1
-			highlight.Parent = optBtn
-
-			local hoverIn = optBtn.MouseEnter:Connect(function()
-				if selectedItem ~= opt then
-					Tween(optBtn, 0.15, {BackgroundTransparency = 0.7, BackgroundColor3 = Color3.fromRGB(50, 50, 50)})
-					Tween(optBtn, 0.15, {TextColor3 = Theme.TextColor})
-				end
-			end)
-			local hoverOut = optBtn.MouseLeave:Connect(function()
-				if selectedItem ~= opt then
-					Tween(optBtn, 0.15, {BackgroundTransparency = 1})
-					Tween(optBtn, 0.15, {TextColor3 = Theme.TextMuted})
-				end
-			end)
-			compJanitor:Add(hoverIn)
-			compJanitor:Add(hoverOut)
-
-			local clickConn = optBtn.MouseButton1Click:Connect(function()
-				if selectedItem and itemHighlights[selectedItem] then
-					Tween(selectedItem, 0.15, {BackgroundTransparency = 1, BackgroundColor3 = Color3.fromRGB(35, 35, 35)})
-					Tween(selectedItem, 0.15, {TextColor3 = Theme.TextMuted})
-					Tween(itemHighlights[selectedItem], 0.15, {BackgroundTransparency = 1})
-				end
-				selectedItem = optBtn
-				itemHighlights[optBtn] = highlight
-				Tween(optBtn, 0.2, {BackgroundTransparency = 0.6, BackgroundColor3 = Theme.Accent})
-				Tween(optBtn, 0.2, {TextColor3 = Theme.TextColor})
-				Tween(highlight, 0.2, {BackgroundTransparency = 0})
+			optBtn.MouseButton1Click:Connect(function()
 				mainBtn.Text = "  " .. dropText .. " (" .. opt .. ")"
+				isOpened = false
+				CreateTween(dropFrame, 0.2, {Size = UDim2.new(1, 0, 0, 40)})
+				CreateTween(arrow, 0.2, {Rotation = 0})
 				callback(opt)
-				isOpened = false
-				_CloseDropdown(dropFrame, listScroller, arrow)
-			end)
-			compJanitor:Add(clickConn)
-
-			table.insert(itemFrames, optBtn)
-		end
-
-		local closeOverlay = Instance.new("TextButton")
-		closeOverlay.Size = UDim2.new(1, 0, 1, 0)
-		closeOverlay.BackgroundTransparency = 1
-		closeOverlay.Text = ""
-		closeOverlay.Visible = false
-		closeOverlay.ZIndex = 5
-		closeOverlay.Parent = dropFrame
-
-		local overlayClick = closeOverlay.MouseButton1Click:Connect(function()
-			if isOpened then
-				isOpened = false
-				_CloseDropdown(dropFrame, listScroller, arrow)
-			end
-		end)
-		compJanitor:Add(overlayClick)
-
-		local function _OpenDropdown(dropFrame, listScroller, arrow, itemCount)
-			local maxListHeight = math.min(itemCount * 36 + 8, 200)
-			local totalHeight = 44 + maxListHeight
-			listScroller.Visible = true
-			listScroller.CanvasSize = UDim2.new(0, 0, 0, itemCount * 36)
-			closeOverlay.Visible = true
-			Tween(dropFrame, 0.25, {Size = UDim2.new(1, 0, 0, totalHeight)}, Enum.EasingStyle.Quart)
-			Tween(arrow, 0.25, {Rotation = 180}, Enum.EasingStyle.Quart)
-			task.delay(0.05, function()
-				if not listScroller.Parent then return end
-				for _, child in ipairs(listScroller:GetChildren()) do
-					if child:IsA("TextButton") then
-						child.BackgroundTransparency = 1
-						Tween(child, 0.2, {BackgroundTransparency = 0.7, BackgroundColor3 = Color3.fromRGB(35, 35, 35)})
-					end
-				end
 			end)
 		end
 
-		local function _CloseDropdown(dropFrame, listScroller, arrow)
-			Tween(dropFrame, 0.2, {Size = UDim2.new(1, 0, 0, 44)}, Enum.EasingStyle.Quart)
-			Tween(arrow, 0.2, {Rotation = 0}, Enum.EasingStyle.Quart)
-			closeOverlay.Visible = false
-			listScroller.Visible = false
-		end
-
-		local function toggleDropdown()
+		mainBtn.MouseButton1Click:Connect(function()
 			isOpened = not isOpened
 			if isOpened then
-				_OpenDropdown(dropFrame, listScroller, arrow, #list)
+				local neededHeight = 45 + (#list * 34)
+				CreateTween(dropFrame, 0.2, {Size = UDim2.new(1, 0, 0, neededHeight)})
+				CreateTween(arrow, 0.2, {Rotation = 180})
 			else
-				_CloseDropdown(dropFrame, listScroller, arrow)
+				CreateTween(dropFrame, 0.2, {Size = UDim2.new(1, 0, 0, 40)})
+				CreateTween(arrow, 0.2, {Rotation = 0})
 			end
-		end
-
-		local mainClick = mainBtn.MouseButton1Click:Connect(toggleDropdown)
-		compJanitor:Add(mainClick)
-
-		return {
-			Destroy = function() compJanitor:Destroy() end,
-			GetValue = function() return selectedItem and selectedItem.Text or nil end,
-			SetValue = function(value)
-				for _, itemBtn in ipairs(itemFrames) do
-					if itemBtn.Text == value then
-						if selectedItem and itemHighlights[selectedItem] then
-							Tween(selectedItem, 0.15, {BackgroundTransparency = 1, BackgroundColor3 = Color3.fromRGB(35, 35, 35)})
-							Tween(selectedItem, 0.15, {TextColor3 = Theme.TextMuted})
-							Tween(itemHighlights[selectedItem], 0.15, {BackgroundTransparency = 1})
-						end
-						selectedItem = itemBtn
-						local hl = itemBtn:FindFirstChildOfClass("Frame")
-						if hl then itemHighlights[itemBtn] = hl end
-						Tween(itemBtn, 0.2, {BackgroundTransparency = 0.6, BackgroundColor3 = Theme.Accent})
-						Tween(itemBtn, 0.2, {TextColor3 = Theme.TextColor})
-						mainBtn.Text = "  " .. dropText .. " (" .. value .. ")"
-						callback(value)
-						break
-					end
-				end
-			end,
-		}
+		end)
 	end
 
-	-- TEXTBOX
+	-- [ COMPONENTE: TEXTBOX (CAMPO DE TEXTO) ]
 	function elements:CreateTextBox(placeholder, callback)
 		callback = callback or function() end
-		local compJanitor = Janitor.new()
 
 		local boxFrame = Instance.new("Frame")
-		boxFrame.Size = UDim2.new(1, 0, 0, 44)
+		boxFrame.Size = UDim2.new(1, 0, 0, 40)
 		boxFrame.BackgroundColor3 = Theme.CardBg
 		boxFrame.Parent = pageFrame
-		compJanitor:Add(boxFrame)
 
 		local bfCorner = Instance.new("UICorner")
 		bfCorner.CornerRadius = UDim.new(0, 8)
 		bfCorner.Parent = boxFrame
 
 		local stroke = Instance.new("UIStroke")
-		stroke.Thickness = 1.5
+		stroke.Thickness = 1
 		stroke.Color = Theme.Stroke
 		stroke.Parent = boxFrame
-
-		local statusBar = Instance.new("Frame")
-		statusBar.Size = UDim2.new(1, 0, 0, 2)
-		statusBar.Position = UDim2.new(0, 0, 1, -2)
-		statusBar.BackgroundColor3 = Theme.Stroke
-		statusBar.BorderSizePixel = 0
-		statusBar.BackgroundTransparency = 1
-		statusBar.Parent = boxFrame
-
-		local statusCorner = Instance.new("UICorner")
-		statusCorner.CornerRadius = UDim.new(0, 2)
-		statusCorner.Parent = statusBar
 
 		local box = Instance.new("TextBox")
 		box.Size = UDim2.new(1, -24, 1, 0)
@@ -1528,97 +717,61 @@ function Muzysh:CreatePage(pageName)
 		box.Font = Theme.Font
 		box.TextSize = 14
 		box.TextXAlignment = Enum.TextXAlignment.Left
-		box.ClearTextOnFocus = false
 		box.Parent = boxFrame
 
-		local floatingLabel = Instance.new("TextLabel")
-		floatingLabel.Size = UDim2.new(0, 100, 0, 16)
-		floatingLabel.Position = UDim2.new(0, 12, 0, -18)
-		floatingLabel.BackgroundTransparency = 1
-		floatingLabel.Text = placeholder
-		floatingLabel.TextColor3 = Theme.TextMuted
-		floatingLabel.Font = Theme.Font
-		floatingLabel.TextSize = 11
-		floatingLabel.TextXAlignment = Enum.TextXAlignment.Left
-		floatingLabel.Visible = false
-		floatingLabel.Parent = boxFrame
-
-		local currentState = "normal"
-
-		local function setState(state)
-			currentState = state
-			if state == "normal" then
-				Tween(stroke, 0.2, {Color = Theme.Stroke, Thickness = 1.5})
-				Tween(statusBar, 0.2, {BackgroundTransparency = 1})
-				Tween(floatingLabel, 0.15, {TextColor3 = Theme.TextMuted})
-			elseif state == "focused" then
-				Tween(stroke, 0.25, {Color = Theme.Accent, Thickness = 2})
-				Tween(statusBar, 0.25, {BackgroundTransparency = 0, BackgroundColor3 = Theme.Accent})
-				Tween(floatingLabel, 0.15, {TextColor3 = Theme.Accent})
-				floatingLabel.Visible = true
-				Tween(floatingLabel, 0.2, {Position = UDim2.new(0, 12, 0, -18), TextSize = 11})
-			elseif state == "success" then
-				Tween(stroke, 0.25, {Color = Color3.fromRGB(50, 200, 80), Thickness = 2})
-				Tween(statusBar, 0.25, {BackgroundTransparency = 0, BackgroundColor3 = Color3.fromRGB(50, 200, 80)})
-			elseif state == "error" then
-				Tween(stroke, 0.25, {Color = Color3.fromRGB(255, 80, 80), Thickness = 2})
-				Tween(statusBar, 0.25, {BackgroundTransparency = 0, BackgroundColor3 = Color3.fromRGB(255, 80, 80)})
-			end
-		end
-
-		local focusedConn = box.Focused:Connect(function()
-			setState("focused")
-		end)
-		compJanitor:Add(focusedConn)
-
-		local focusLostConn = box.FocusLost:Connect(function(enterPressed)
-			if currentState == "focused" then
-				setState("normal")
-			end
-			if box.Text ~= "" then
-				floatingLabel.Visible = true
-			else
-				Tween(floatingLabel, 0.15, {Position = UDim2.new(0, 12, 0, 0), TextSize = 14})
-				task.delay(0.15, function()
-					if box.Text == "" then floatingLabel.Visible = false end
-				end)
-			end
+		-- Feedback Visual de Foco (Glow Accent)
+		box.Focused:Connect(function() CreateTween(stroke, 0.2, {Color = Theme.Accent}) end)
+		box.FocusLost:Connect(function(enterPressed) 
+			CreateTween(stroke, 0.2, {Color = Theme.Stroke})
 			callback(box.Text, enterPressed)
 		end)
-		compJanitor:Add(focusLostConn)
-
-		local textChangedConn = box:GetPropertyChangedSignal("Text"):Connect(function()
-			if box.Text ~= "" and not floatingLabel.Visible then
-				floatingLabel.Visible = true
-				Tween(floatingLabel, 0.2, {Position = UDim2.new(0, 12, 0, -18), TextSize = 11})
-			elseif box.Text == "" and currentState == "normal" then
-				floatingLabel.Visible = false
-			end
-		end)
-		compJanitor:Add(textChangedConn)
-
-		return {
-			Destroy = function() compJanitor:Destroy() end,
-			GetText = function() return box.Text end,
-			SetText = function(text)
-				box.Text = text or ""
-				if box.Text ~= "" then
-					floatingLabel.Visible = true
-					Tween(floatingLabel, 0.2, {Position = UDim2.new(0, 12, 0, -18), TextSize = 11})
-				end
-			end,
-			SetState = function(state) setState(state) end,
-			SetPlaceholder = function(ph)
-				box.PlaceholderText = ph
-				floatingLabel.Text = ph
-			end,
-		}
 	end
 
 	return elements
 end
 
 -- ============================================================================
--- EXPORTAÇÃO
+-- [[ EXEMPLO PRÁTICO DE USO DA LIBRARY ]]
 -- ============================================================================
+
+local Window = Muzysh.Init()
+
+-- Criação da Aba Home
+local Home = Window:CreatePage("Home")
+Home:CreateSection("Geral")
+Home:CreateButton("Injetar Script Exemplo", function()
+	print("Muzysh Premium UI carregada perfeitamente no Mobile/PC!")
+end)
+
+Home:CreateToggle("Ativar Auto Farm", false, function(value)
+	print("Auto Farm definido para:", value)
+end)
+
+Home:CreateSlider("Velocidade do Jogador", 16, 150, 16, function(value)
+	if LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid") then
+		LocalPlayer.Character:FindFirstChildOfClass("Humanoid").WalkSpeed = value
+	end
+end)
+
+-- Criação da Aba Scripts
+local Scripts = Window:CreatePage("Scripts")
+Scripts:CreateSection("Teleportes")
+Scripts:CreateDropdown("Selecione o Mundo", {"Mundo Inicial", "Zona Desértica", "Ilha de Lava", "Nível Secreto"}, function(selected)
+	print("Teleportando para:", selected)
+end)
+
+Scripts:CreateSection("Customização")
+Scripts:CreateTextBox("Digite o ID da Animação...", function(text, enterPressed)
+	if enterPressed then
+		print("ID enviado:", text)
+	end
+end)
+
+-- Criação da Aba Configurações
+local Settings = Window:CreatePage("Settings")
+Settings:CreateSection("Interface")
+Settings:CreateToggle("Ativar Notificações", true, function(state)
+	print("Notificações:", state)
+end)
+
 return Muzysh
