@@ -10,33 +10,27 @@ local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
 
--- Paleta Ajustada (Mais contraste, visual mais limpo)
+-- Paleta de Cores Premium (Inspirada diretamente na WindUI / Voidware)
 local DefaultTheme = {
-    Background = Color3.fromRGB(24, 24, 24),
-    TopBar = Color3.fromRGB(30, 30, 30),
-    Sidebar = Color3.fromRGB(28, 28, 28),
-    Accent = Color3.fromRGB(215, 35, 35),
+    Background = Color3.fromRGB(18, 18, 18),     -- Fundo profundo ultra-dark
+    TopBar = Color3.fromRGB(22, 22, 22),         -- Topo sutil
+    Sidebar = Color3.fromRGB(22, 22, 22),        -- Lateral integrada
+    Accent = Color3.fromRGB(215, 35, 35),        -- Muzysh Red
     AccentHover = Color3.fromRGB(245, 55, 55),
-    CardBg = Color3.fromRGB(38, 38, 38),
-    CardHover = Color3.fromRGB(44, 44, 44),
-    TextColor = Color3.fromRGB(255, 255, 255),
-    TextMuted = Color3.fromRGB(160, 160, 160),
-    Stroke = Color3.fromRGB(60, 60, 60),
-    CornerRadius = UDim.new(0, 6),
+    CardBg = Color3.fromRGB(28, 28, 28),         -- Cards flutuantes com contraste
+    CardHover = Color3.fromRGB(34, 34, 34),
+    TextColor = Color3.fromRGB(245, 245, 245),   -- Texto principal limpo
+    TextMuted = Color3.fromRGB(140, 140, 140),   -- Textos secundários elegantes
+    Stroke = Color3.fromRGB(42, 42, 42),         -- Linhas de divisão ultra-finas
+    CornerRadius = UDim.new(0, 8),               -- Cantos suaves arredondados
     Font = Enum.Font.GothamMedium,
     FontBold = Enum.Font.GothamBold
 }
 
-local _tweens = {}
 local function CreateTween(instance, duration, properties, style)
-    if _tweens[instance] then _tweens[instance]:Cancel() end
     local tweenInfo = TweenInfo.new(duration, style or Enum.EasingStyle.Quint, Enum.EasingDirection.Out)
     local tween = TweenService:Create(instance, tweenInfo, properties)
     tween:Play()
-    _tweens[instance] = tween
-    tween.Completed:Connect(function()
-        if _tweens[instance] == tween then _tweens[instance] = nil end
-    end)
     return tween
 end
 
@@ -78,227 +72,137 @@ end
 
 function Muzysh:SaveConfig()
     if not self.ConfigName or not writefile then return end
-    pcall(function()
-        writefile(self.ConfigName .. ".json", HttpService:JSONEncode(self.Flags))
-    end)
+    pcall(function() writefile(self.ConfigName .. ".json", HttpService:JSONEncode(self.Flags)) end)
 end
 
 function Muzysh:LoadConfig()
     if not self.ConfigName or not isfile or not readfile then return end
     if isfile(self.ConfigName .. ".json") then
-        local success, data = pcall(function()
-            return HttpService:JSONDecode(readfile(self.ConfigName .. ".json"))
-        end)
-        if success and type(data) == "table" then
-            self.SavedFlags = data
-        end
+        local success, data = pcall(function() return HttpService:JSONDecode(readfile(self.ConfigName .. ".json")) end)
+        if success and type(data) == "table" then self.SavedFlags = data end
     end
 end
 
 function Muzysh:DestroyWindow()
     if self._isDestroyed then return end
     self._isDestroyed = true
-
-    for _, connection in pairs(self._connections) do
-        if connection then connection:Disconnect() end
-    end
-    table.clear(self._connections)
-
-    if self._mainTween then self._mainTween:Cancel() end
-    self._mainTween = CreateTween(self.MainFrame, 0.3, { Size = UDim2.new(0, 0, 0, 0), BackgroundTransparency = 1 }, Enum.EasingStyle.Quart)
-
+    for _, c in pairs(self._connections) do if c then c:Disconnect() end end
+    CreateTween(self.MainFrame, 0.3, {Size = UDim2.new(0,0,0,0), BackgroundTransparency = 1}, Enum.EasingStyle.Quart)
     if self.FloatingBtn then self.FloatingBtn:Destroy() end
-    task.delay(0.35, function()
-        if self.ScreenGui and self.ScreenGui.Parent then self.ScreenGui:Destroy() end
-    end)
+    task.delay(0.35, function() if self.ScreenGui then self.ScreenGui:Destroy() end end)
 end
 
 function Muzysh:MinimizeWindow()
     if self._isMinimized or self._isDestroyed then return end
     self._isMinimized = true
-
-    if self._mainTween then self._mainTween:Cancel() end
-    self._mainTween = CreateTween(self.MainFrame, 0.3, { Size = UDim2.new(0, 0, 0, 0), BackgroundTransparency = 1 }, Enum.EasingStyle.Quart)
-    self._mainTween.Completed:Connect(function()
-        if self._isDestroyed then return end
-        self.MainFrame.Visible = false
+    CreateTween(self.MainFrame, 0.3, {Size = UDim2.new(0,0,0,0), BackgroundTransparency = 1}, Enum.EasingStyle.Quart).Completed:Connect(function()
+        if not self._isDestroyed then self.MainFrame.Visible = false end
     end)
-
     if not self.FloatingBtn then self:CreateFloatingButton() else self.FloatingBtn.Visible = true end
 end
 
 function Muzysh:RestoreWindow()
     if not self._isMinimized or self._isDestroyed then return end
     self._isMinimized = false
-
     if self.FloatingBtn then self.FloatingBtn.Visible = false end
-    if self._mainTween then self._mainTween:Cancel() end
-
     self.MainFrame.Visible = true
-    self._mainTween = CreateTween(self.MainFrame, 0.4, { Size = self.OriginalSize, BackgroundTransparency = 0 }, Enum.EasingStyle.Back)
+    CreateTween(self.MainFrame, 0.4, {Size = self.OriginalSize, BackgroundTransparency = 0}, Enum.EasingStyle.Back)
 end
 
 function Muzysh:CreateFloatingButton()
-    if self.FloatingBtn or self._isDestroyed then return end
-
     local floater = Instance.new("ImageButton")
-    floater.Name = "MinimizeFloater"
-    floater.Size = UDim2.new(0, 48, 0, 48)
+    floater.Size = UDim2.new(0, 46, 0, 46)
     floater.Position = UDim2.new(1, -60, 1, -60)
     floater.BackgroundColor3 = self.Theme.CardBg
-    floater.Image = "rbxassetid://72939763737478"
+    floater.Image = "rbxassetid://10734996259" -- Ícone elegante de engrenagem/painel
     floater.ScaleType = Enum.ScaleType.Fit
     floater.Parent = self.ScreenGui
 
-    local floaterCorner = Instance.new("UICorner")
-    floaterCorner.CornerRadius = UDim.new(1, 0)
-    floaterCorner.Parent = floater
-
-    local floaterStroke = Instance.new("UIStroke")
-    floaterStroke.Color = self.Theme.Stroke
-    floaterStroke.Thickness = 1
-    floaterStroke.Parent = floater
+    local c = Instance.new("UICorner") c.CornerRadius = UDim.new(1, 0) c.Parent = floater
+    local s = Instance.new("UIStroke") s.Color = self.Theme.Stroke s.Thickness = 1 s.Parent = floater
 
     MakeDraggable(floater, floater)
     floater.MouseButton1Click:Connect(function() self:RestoreWindow() end)
-
     self.FloatingBtn = floater
 end
 
 function Muzysh.Init(title, configName, customTheme)
-    if not workspace.CurrentCamera then
-        workspace:GetPropertyChangedSignal("CurrentCamera"):Wait()
-    end
-
     local self = setmetatable({}, Muzysh)
     self._isMinimized = false
     self._isDestroyed = false
     self._connections = {}
-    
     self.ConfigName = configName
     self.Flags = {}
     self.SavedFlags = {}
     if self.ConfigName then self:LoadConfig() end
-    
+
     self.Theme = {}
-    for k, v in pairs(DefaultTheme) do
-        self.Theme[k] = (customTheme and customTheme[k]) ~= nil and customTheme[k] or v
-    end
+    for k, v in pairs(DefaultTheme) do self.Theme[k] = (customTheme and customTheme[k]) ~= nil and customTheme[k] or v end
 
     self.ScreenGui = Instance.new("ScreenGui")
-    self.ScreenGui.Name = "Muzysh_Fluent_Fixed"
+    self.ScreenGui.Name = "Muzysh_WindStyle"
     self.ScreenGui.ResetOnSpawn = false
     self.ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+    
+    if syn and syn.protect_gui then syn.protect_gui(self.ScreenGui) self.ScreenGui.Parent = CoreGui else self.ScreenGui.Parent = PlayerGui end
 
-    if syn and syn.protect_gui then
-        syn.protect_gui(self.ScreenGui)
-        self.ScreenGui.Parent = CoreGui
-    else
-        self.ScreenGui.Parent = PlayerGui
-    end
-
+    -- Main Window
     self.MainFrame = Instance.new("Frame")
-    self.MainFrame.Name = "MainFrame"
-    self.MainFrame.Size = UDim2.new(0, 590, 0, 380)
-    self.MainFrame.Position = UDim2.new(0.5, -295, 0.5, -190)
+    self.MainFrame.Size = UDim2.new(0, 620, 0, 400)
+    self.MainFrame.Position = UDim2.new(0.5, -310, 0.5, -200)
     self.MainFrame.BackgroundColor3 = self.Theme.Background
     self.MainFrame.ClipsDescendants = true
     self.MainFrame.Parent = self.ScreenGui
-    self.OriginalSize = UDim2.new(0, 590, 0, 380)
+    self.OriginalSize = UDim2.new(0, 620, 0, 400)
 
-    local corner = Instance.new("UICorner")
-    corner.CornerRadius = self.Theme.CornerRadius
-    corner.Parent = self.MainFrame
+    local corner = Instance.new("UICorner") corner.CornerRadius = self.Theme.CornerRadius corner.Parent = self.MainFrame
+    local stroke = Instance.new("UIStroke") stroke.Color = self.Theme.Stroke stroke.Thickness = 1 stroke.Parent = self.MainFrame
 
-    local stroke = Instance.new("UIStroke")
-    stroke.Color = self.Theme.Stroke
-    stroke.Thickness = 1
-    stroke.Parent = self.MainFrame
-
-    local uiScale = Instance.new("UIScale")
-    uiScale.Parent = self.MainFrame
-
-    local function UpdateScale()
-        local cam = workspace.CurrentCamera
-        if not cam then return end
-        local vs = cam.ViewportSize
-        if vs.X < 620 or vs.Y < 420 then
-            uiScale.Scale = math.min(vs.X / 640, vs.Y / 430)
-        else
-            uiScale.Scale = 1
-        end
-    end
-    UpdateScale()
-    
-    local camConnection = workspace:GetPropertyChangedSignal("CurrentCamera"):Connect(function()
-        local cam = workspace.CurrentCamera
-        if cam then
-            local vsConnection = cam:GetPropertyChangedSignal("ViewportSize"):Connect(UpdateScale)
-            table.insert(self._connections, vsConnection)
-            UpdateScale()
-        end
-    end)
-    table.insert(self._connections, camConnection)
-
+    -- TopBar (Estilo Header da WindUI)
     self.TopBar = Instance.new("Frame")
-    self.TopBar.Size = UDim2.new(1, 0, 0, 48)
+    self.TopBar.Size = UDim2.new(1, 0, 0, 42)
     self.TopBar.BackgroundColor3 = self.Theme.TopBar
+    self.TopBar.BackgroundTransparency = 1 -- visual integrado transparente
     self.TopBar.Parent = self.MainFrame
     MakeDraggable(self.TopBar, self.MainFrame)
 
-    local topCorner = Instance.new("UICorner")
-    topCorner.CornerRadius = self.Theme.CornerRadius
-    topCorner.Parent = self.TopBar
-
-    local topDivider = Instance.new("Frame")
-    topDivider.Size = UDim2.new(1, 0, 0, 1)
-    topDivider.Position = UDim2.new(0, 0, 1, -1)
-    topDivider.BackgroundColor3 = self.Theme.Stroke
-    topDivider.BorderSizePixel = 0
-    topDivider.Parent = self.TopBar
-
     local titleLabel = Instance.new("TextLabel")
-    titleLabel.Size = UDim2.new(0, 250, 1, 0)
-    titleLabel.Position = UDim2.new(0, 16, 0, 0)
+    titleLabel.Size = UDim2.new(0, 300, 1, 0)
+    titleLabel.Position = UDim2.new(0, 18, 0, 0)
     titleLabel.BackgroundTransparency = 1
-    titleLabel.Text = title or "Muzysh <font color='rgb(215,35,35)'>.</font>"
+    titleLabel.Text = title or "Muzysh <font color='rgb(215,35,35)'>Hub</font>"
     titleLabel.TextColor3 = self.Theme.TextColor
     titleLabel.Font = self.Theme.FontBold
-    titleLabel.TextSize = 16
+    titleLabel.TextSize = 15
     titleLabel.RichText = true
     titleLabel.TextXAlignment = Enum.TextXAlignment.Left
     titleLabel.Parent = self.TopBar
 
-    local closeBtn = Instance.new("TextButton")
-    closeBtn.Size = UDim2.new(0, 32, 0, 32)
-    closeBtn.Position = UDim2.new(1, -38, 0.5, -16)
+    -- Window Controls Minimalistas (Iguais aos do print do WindUI)
+    local closeBtn = Instance.new("ImageButton")
+    closeBtn.Size = UDim2.new(0, 14, 0, 14)
+    closeBtn.Position = UDim2.new(1, -26, 0.5, -7)
     closeBtn.BackgroundTransparency = 1
-    closeBtn.Text = "×"
-    closeBtn.TextColor3 = self.Theme.TextMuted
-    closeBtn.Font = Enum.Font.Gotham
-    closeBtn.TextSize = 22
+    closeBtn.Image = "rbxassetid://11432842917" -- Ícone de fechar moderno
+    closeBtn.ImageColor3 = self.Theme.TextMuted
     closeBtn.Parent = self.TopBar
-    closeBtn.MouseEnter:Connect(function() CreateTween(closeBtn, 0.15, {TextColor3 = self.Theme.Accent}) end)
-    closeBtn.MouseLeave:Connect(function() CreateTween(closeBtn, 0.15, {TextColor3 = self.Theme.TextMuted}) end)
     closeBtn.MouseButton1Click:Connect(function() self:DestroyWindow() end)
 
-    local minimizeBtn = Instance.new("TextButton")
-    minimizeBtn.Size = UDim2.new(0, 32, 0, 32)
-    minimizeBtn.Position = UDim2.new(1, -74, 0.5, -16)
-    minimizeBtn.BackgroundTransparency = 1
-    minimizeBtn.Text = "−"
-    minimizeBtn.TextColor3 = self.Theme.TextMuted
-    minimizeBtn.Font = Enum.Font.Gotham
-    minimizeBtn.TextSize = 22
-    minimizeBtn.Parent = self.TopBar
-    minimizeBtn.MouseEnter:Connect(function() CreateTween(minimizeBtn, 0.15, {TextColor3 = self.Theme.TextColor}) end)
-    minimizeBtn.MouseLeave:Connect(function() CreateTween(minimizeBtn, 0.15, {TextColor3 = self.Theme.TextMuted}) end)
-    minimizeBtn.MouseButton1Click:Connect(function() self:MinimizeWindow() end)
+    local minBtn = Instance.new("ImageButton")
+    minBtn.Size = UDim2.new(0, 14, 0, 14)
+    minBtn.Position = UDim2.new(1, -52, 0.5, -7)
+    minBtn.BackgroundTransparency = 1
+    minBtn.Image = "rbxassetid://11419734182" -- Ícone de minimizar moderno
+    minBtn.ImageColor3 = self.Theme.TextMuted
+    minBtn.Parent = self.TopBar
+    minBtn.MouseButton1Click:Connect(function() self:MinimizeWindow() end)
 
+    -- Sidebar Container (Mais larga e robusta para caber os ícones e perfil)
     self.Sidebar = Instance.new("Frame")
-    self.Sidebar.Size = UDim2.new(0, 140, 1, -48)
-    self.Sidebar.Position = UDim2.new(0, 0, 0, 48)
+    self.Sidebar.Size = UDim2.new(0, 165, 1, -42)
+    self.Sidebar.Position = UDim2.new(0, 0, 0, 42)
     self.Sidebar.BackgroundColor3 = self.Theme.Sidebar
+    self.Sidebar.BorderSizePixel = 0
     self.Sidebar.Parent = self.MainFrame
 
     local sideDivider = Instance.new("Frame")
@@ -308,19 +212,99 @@ function Muzysh.Init(title, configName, customTheme)
     sideDivider.BorderSizePixel = 0
     sideDivider.Parent = self.Sidebar
 
+    -- Fake Search Box na Sidebar (Item estético idêntico ao da WindUI)
+    local searchBox = Instance.new("Frame")
+    searchBox.Size = UDim2.new(1, -24, 0, 30)
+    searchBox.Position = UDim2.new(0, 12, 0, 4)
+    searchBox.BackgroundColor3 = Color3.fromRGB(32, 32, 32)
+    searchBox.Parent = self.Sidebar
+    local sbc = Instance.new("UICorner") sbc.CornerRadius = UDim.new(0, 5) sbc.Parent = searchBox
+    local sbs = Instance.new("UIStroke") sbs.Color = self.Theme.Stroke sbs.Parent = searchBox
+    
+    local searchIcon = Instance.new("ImageLabel")
+    searchIcon.Size = UDim2.new(0, 14, 0, 14)
+    searchIcon.Position = UDim2.new(0, 8, 0.5, -7)
+    searchIcon.BackgroundTransparency = 1
+    searchIcon.Image = "rbxassetid://11422143469"
+    searchIcon.ImageColor3 = self.Theme.TextMuted
+    searchIcon.Parent = searchBox
+
+    local searchPlaceholder = Instance.new("TextLabel")
+    searchPlaceholder.Size = UDim2.new(1, -30, 1, 0)
+    searchPlaceholder.Position = UDim2.new(0, 28, 0, 0)
+    searchPlaceholder.BackgroundTransparency = 1
+    searchPlaceholder.Text = "Search"
+    searchPlaceholder.Font = self.Theme.Font
+    searchPlaceholder.TextSize = 12
+    searchPlaceholder.TextColor3 = self.Theme.TextMuted
+    searchPlaceholder.TextXAlignment = Enum.TextXAlignment.Left
+    searchPlaceholder.Parent = searchBox
+
+    -- Holder para as abas (Tabs) para não colidir com o perfil no rodapé
+    local tabScroll = Instance.new("ScrollingFrame")
+    tabScroll.Size = UDim2.new(1, 0, 1, -95)
+    tabScroll.Position = UDim2.new(0, 0, 0, 42)
+    tabScroll.BackgroundTransparency = 1
+    tabScroll.ScrollBarThickness = 0
+    tabScroll.CanvasSize = UDim2.new(0, 0, 0, 0)
+    tabScroll.Parent = self.Sidebar
+
     local sideLayout = Instance.new("UIListLayout")
-    sideLayout.Padding = UDim.new(0, 4)
+    sideLayout.Padding = UDim.new(0, 3)
     sideLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
     sideLayout.SortOrder = Enum.SortOrder.LayoutOrder
-    sideLayout.Parent = self.Sidebar
+    sideLayout.Parent = tabScroll
 
-    local sidePadding = Instance.new("UIPadding")
-    sidePadding.PaddingTop = UDim.new(0, 12)
-    sidePadding.Parent = self.Sidebar
+    sideLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+        tabScroll.CanvasSize = UDim2.new(0, 0, 0, sideLayout.AbsoluteContentSize.Y)
+    end)
 
+    -- CARD DE PERFIL AUTOMÁTICO (Inspirado no canto inferior esquerdo da WindUI)
+    local profileCard = Instance.new("Frame")
+    profileCard.Size = UDim2.new(1, -16, 0, 44)
+    profileCard.Position = UDim2.new(0, 8, 1, -52)
+    profileCard.BackgroundTransparency = 1
+    profileCard.Parent = self.Sidebar
+
+    local avatarImg = Instance.new("ImageLabel")
+    avatarImg.Size = UDim2.new(0, 32, 0, 32)
+    avatarImg.Position = UDim2.new(0, 4, 0.5, -16)
+    avatarImg.BackgroundColor3 = self.Theme.CardBg
+    avatarImg.Parent = profileCard
+    local avCorner = Instance.new("UICorner") avCorner.CornerRadius = UDim.new(1, 0) avCorner.Parent = avatarImg
+
+    -- Puxa a foto real do jogador logado
+    pcall(function()
+        local content, isReady = Players:GetUserThumbnailAsync(LocalPlayer.UserId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size48x48)
+        if isReady then avatarImg.Image = content end
+    end)
+
+    local displayNameLabel = Instance.new("TextLabel")
+    displayNameLabel.Size = UDim2.new(1, -44, 0, 16)
+    displayNameLabel.Position = UDim2.new(0, 42, 0.5, -14)
+    displayNameLabel.BackgroundTransparency = 1
+    displayNameLabel.Text = LocalPlayer.DisplayName
+    displayNameLabel.Font = self.Theme.FontBold
+    displayNameLabel.TextSize = 12
+    displayNameLabel.TextColor3 = self.Theme.TextColor
+    displayNameLabel.TextXAlignment = Enum.TextXAlignment.Left
+    displayNameLabel.Parent = profileCard
+
+    local usernameLabel = Instance.new("TextLabel")
+    usernameLabel.Size = UDim2.new(1, -44, 0, 12)
+    usernameLabel.Position = UDim2.new(0, 42, 0.5, 2)
+    usernameLabel.BackgroundTransparency = 1
+    usernameLabel.Text = "@" .. LocalPlayer.Name
+    usernameLabel.Font = self.Theme.Font
+    usernameLabel.TextSize = 10
+    usernameLabel.TextColor3 = self.Theme.TextMuted
+    usernameLabel.TextXAlignment = Enum.TextXAlignment.Left
+    usernameLabel.Parent = profileCard
+
+    -- Container Central de Conteúdo das Páginas
     self.PageContainer = Instance.new("Frame")
-    self.PageContainer.Size = UDim2.new(1, -156, 1, -64)
-    self.PageContainer.Position = UDim2.new(0, 148, 0, 56)
+    self.PageContainer.Size = UDim2.new(1, -181, 1, -54)
+    self.PageContainer.Position = UDim2.new(0, 173, 0, 46)
     self.PageContainer.BackgroundTransparency = 1
     self.PageContainer.Parent = self.MainFrame
 
@@ -328,16 +312,16 @@ function Muzysh.Init(title, configName, customTheme)
     self.Tabs = {}
     self.FirstPage = nil
 
+    -- Animação de Entrada fluida do painel completo
     self.MainFrame.Size = UDim2.new(0, 0, 0, 0)
     CreateTween(self.MainFrame, 0.5, {Size = self.OriginalSize}, Enum.EasingStyle.Quint)
 
     return self
 end
 
--- ======================== CRIAÇÃO DE PÁGINAS E COMPONENTES ========================
+-- ======================== DESIGN DOS COMPONENTES INTERNOS ========================
 
-function Muzysh:CreatePage(pageName, icon)
-    -- Trocado CanvasGroup por Frame Padrão para evitar bugs de resolução
+function Muzysh:CreatePage(pageName, iconId)
     local pageFrame = Instance.new("ScrollingFrame")
     pageFrame.Size = UDim2.new(1, 0, 1, 0)
     pageFrame.BackgroundTransparency = 1
@@ -353,333 +337,254 @@ function Muzysh:CreatePage(pageName, icon)
     pageLayout.Parent = pageFrame
 
     pageLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-        pageFrame.CanvasSize = UDim2.new(0, 0, 0, pageLayout.AbsoluteContentSize.Y + 15)
+        pageFrame.CanvasSize = UDim2.new(0, 0, 0, pageLayout.AbsoluteContentSize.Y + 10)
     end)
 
     local pagePadding = Instance.new("UIPadding")
     pagePadding.PaddingRight = UDim.new(0, 6)
     pagePadding.Parent = pageFrame
 
+    -- Botão da Aba Lateral (Perfeitamente espaçado e alinhado)
     local tabBtn = Instance.new("TextButton")
-    tabBtn.Size = UDim2.new(0, 124, 0, 34)
+    tabBtn.Size = UDim2.new(1, -16, 0, 32)
     tabBtn.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
     tabBtn.BackgroundTransparency = 1
-    tabBtn.Text = "  " .. pageName
+    tabBtn.Text = iconId and "          " .. pageName or "  " .. pageName
     tabBtn.TextColor3 = self.Theme.TextMuted
     tabBtn.Font = self.Theme.Font
-    tabBtn.TextSize = 13
+    tabBtn.TextSize = 12
     tabBtn.TextXAlignment = Enum.TextXAlignment.Left
-    tabBtn.Parent = self.Sidebar
+    tabBtn.Parent = self.Sidebar:FindFirstChildOfClass("ScrollingFrame")
 
-    if icon then
+    local tabCorner = Instance.new("UICorner") tabCorner.CornerRadius = UDim.new(0, 5) tabCorner.Parent = tabBtn
+
+    if iconId then
         local iconLabel = Instance.new("ImageLabel")
         iconLabel.Size = UDim2.new(0, 16, 0, 16)
-        iconLabel.Position = UDim2.new(0, 8, 0.5, -8)
+        iconLabel.Position = UDim2.new(0, 10, 0.5, -8)
         iconLabel.BackgroundTransparency = 1
-        iconLabel.Image = typeof(icon) == "number" and "rbxassetid://" .. icon or icon
-        iconLabel.ScaleType = Enum.ScaleType.Fit
+        iconLabel.Image = typeof(iconId) == "number" and "rbxassetid://" .. iconId or iconId
         iconLabel.ImageColor3 = self.Theme.TextMuted
+        iconLabel.ScaleType = Enum.ScaleType.Fit
         iconLabel.Parent = tabBtn
-        tabBtn.Text = "        " .. pageName
     end
-
-    local tabCorner = Instance.new("UICorner")
-    tabCorner.CornerRadius = UDim.new(0, 5)
-    tabCorner.Parent = tabBtn
-
-    local indicator = Instance.new("Frame")
-    indicator.Size = UDim2.new(0, 3, 0, 0)
-    indicator.Position = UDim2.new(0, 2, 0.5, 0)
-    indicator.BackgroundColor3 = self.Theme.Accent
-    indicator.BorderSizePixel = 0
-    indicator.Parent = tabBtn
 
     local function SelectPage()
         for _, p in pairs(self.Pages) do p.Visible = false end
-        for t, ind in pairs(self.Tabs) do
-            CreateTween(t, 0.2, {TextColor3 = self.Theme.TextMuted, BackgroundTransparency = 1})
-            local img = t:FindFirstChildWhichIsA("ImageLabel")
-            if img then CreateTween(img, 0.2, {ImageColor3 = self.Theme.TextMuted}) end
-            CreateTween(ind, 0.2, {Size = UDim2.new(0, 3, 0, 0), Position = UDim2.new(0, 2, 0.5, 0)})
+        for t, _ in pairs(self.Tabs) do
+            CreateTween(t, 0.15, {TextColor3 = self.Theme.TextMuted, BackgroundTransparency = 1})
+            local img = t:FindFirstChildOfClass("ImageLabel")
+            if img then CreateTween(img, 0.15, {ImageColor3 = self.Theme.TextMuted}) end
         end
         
-        -- Nova animação: Slide Up limpo
+        -- Transição suave e limpa de subida de página
         pageFrame.Visible = true
-        pageFrame.Position = UDim2.new(0, 0, 0, 15)
-        CreateTween(pageFrame, 0.35, {Position = UDim2.new(0, 0, 0, 0)}, Enum.EasingStyle.Quint)
+        pageFrame.Position = UDim2.new(0, 0, 0, 10)
+        CreateTween(pageFrame, 0.3, {Position = UDim2.new(0, 0, 0, 0)}, Enum.EasingStyle.Quint)
         
-        CreateTween(tabBtn, 0.2, {TextColor3 = self.Theme.TextColor, BackgroundTransparency = 0.94})
-        local activeImg = tabBtn:FindFirstChildWhichIsA("ImageLabel")
-        if activeImg then CreateTween(activeImg, 0.2, {ImageColor3 = self.Theme.TextColor}) end
-        CreateTween(indicator, 0.25, {Size = UDim2.new(0, 3, 0, 16), Position = UDim2.new(0, 2, 0.5, -8)})
+        CreateTween(tabBtn, 0.15, {TextColor3 = self.Theme.TextColor, BackgroundTransparency = 0.93})
+        local activeImg = tabBtn:FindFirstChildOfClass("ImageLabel")
+        if activeImg then CreateTween(activeImg, 0.15, {ImageColor3 = self.Theme.TextColor}) end
     end
 
     tabBtn.MouseButton1Click:Connect(SelectPage)
-    
-    tabBtn.MouseEnter:Connect(function()
-        if not pageFrame.Visible then CreateTween(tabBtn, 0.15, {BackgroundTransparency = 0.97}) end
-    end)
-    tabBtn.MouseLeave:Connect(function()
-        if not pageFrame.Visible then CreateTween(tabBtn, 0.15, {BackgroundTransparency = 1}) end
-    end)
+    tabBtn.MouseEnter:Connect(function() if not pageFrame.Visible then CreateTween(tabBtn, 0.1, {BackgroundTransparency = 0.96}) end end)
+    tabBtn.MouseLeave:Connect(function() if not pageFrame.Visible then CreateTween(tabBtn, 0.1, {BackgroundTransparency = 1}) end end)
 
     table.insert(self.Pages, pageFrame)
-    self.Tabs[tabBtn] = indicator
+    self.Tabs[tabBtn] = true
 
-    if not self.FirstPage then
-        self.FirstPage = SelectPage
-        task.spawn(SelectPage)
-    end
+    if not self.FirstPage then self.FirstPage = SelectPage task.spawn(SelectPage) end
 
     local elements = {}
     local windowSelf = self
 
-    local function CreateCardFrame()
+    -- Gerador de Cards Padrão Clean
+    local function CreateCard()
         local card = Instance.new("Frame")
         card.BackgroundColor3 = windowSelf.Theme.CardBg
-        card.ZIndex = 1
-        
-        local cc = Instance.new("UICorner")
-        cc.CornerRadius = UDim.new(0, 6)
-        cc.Parent = card
-
-        local cs = Instance.new("UIStroke")
-        cs.Color = windowSelf.Theme.Stroke
-        cs.Thickness = 1
-        cs.Parent = card
-
+        local cc = Instance.new("UICorner") cc.CornerRadius = UDim.new(0, 5) cc.Parent = card
+        local cs = Instance.new("UIStroke") cs.Color = windowSelf.Theme.Stroke cs.Thickness = 1 cs.Parent = card
         return card
     end
 
-    -- Helper para corrigir bugs de camadas ZIndex
-    local function SetZIndex(instance, index)
-        instance.ZIndex = index
-        for _, v in pairs(instance:GetDescendants()) do
-            if v:IsA("GuiObject") then v.ZIndex = index end
-        end
-    end
-
     function elements:CreateSection(titleText)
-        local sectionFrame = Instance.new("Frame")
-        sectionFrame.Size = UDim2.new(1, 0, 0, 28)
-        sectionFrame.BackgroundTransparency = 1
-        sectionFrame.Parent = pageFrame
+        local frame = Instance.new("Frame")
+        frame.Size = UDim2.new(1, 0, 0, 24)
+        frame.BackgroundTransparency = 1
+        frame.Parent = pageFrame
 
-        local label = Instance.new("TextLabel")
-        label.Size = UDim2.new(1, 0, 1, 0)
-        label.Text = titleText
-        label.Font = windowSelf.Theme.FontBold
-        label.TextSize = 12
-        label.TextColor3 = windowSelf.Theme.Accent
-        label.TextXAlignment = Enum.TextXAlignment.Left
-        label.TextYAlignment = Enum.TextYAlignment.Bottom
-        label.BackgroundTransparency = 1
-        label.Parent = sectionFrame
+        local lbl = Instance.new("TextLabel")
+        lbl.Size = UDim2.new(1, 0, 1, 0)
+        lbl.Text = titleText
+        lbl.Font = windowSelf.Theme.FontBold
+        lbl.TextSize = 11
+        lbl.TextColor3 = windowSelf.Theme.Accent
+        lbl.TextXAlignment = Enum.TextXAlignment.Left
+        lbl.TextYAlignment = Enum.TextYAlignment.Bottom
+        lbl.BackgroundTransparency = 1
+        lbl.Parent = frame
     end
 
     function elements:CreateButton(btnText, callback)
         callback = callback or function() end
-        local btnFrame = CreateCardFrame()
-        btnFrame.Size = UDim2.new(1, 0, 0, 36)
-        btnFrame.Parent = pageFrame
+        local card = CreateCard()
+        card.Size = UDim2.new(1, 0, 0, 34)
+        card.Parent = pageFrame
 
-        local realBtn = Instance.new("TextButton")
-        realBtn.Size = UDim2.new(1, 0, 1, 0)
-        realBtn.BackgroundTransparency = 1
-        realBtn.Text = btnText
-        realBtn.TextColor3 = windowSelf.Theme.TextColor
-        realBtn.Font = windowSelf.Theme.Font
-        realBtn.TextSize = 13
-        realBtn.Parent = btnFrame
+        local btn = Instance.new("TextButton")
+        btn.Size = UDim2.new(1, 0, 1, 0)
+        btn.BackgroundTransparency = 1
+        btn.Text = btnText
+        btn.TextColor3 = windowSelf.Theme.TextColor
+        btn.Font = windowSelf.Theme.Font
+        btn.TextSize = 12
+        btn.Parent = card
 
-        btnFrame.MouseEnter:Connect(function() CreateTween(btnFrame, 0.15, {BackgroundColor3 = windowSelf.Theme.CardHover}) end)
-        btnFrame.MouseLeave:Connect(function() CreateTween(btnFrame, 0.15, {BackgroundColor3 = windowSelf.Theme.CardBg}) end)
-        
-        realBtn.MouseButton1Down:Connect(function() CreateTween(btnFrame, 0.05, {BackgroundTransparency = 0.3}) end)
-        realBtn.MouseButton1Up:Connect(function() CreateTween(btnFrame, 0.05, {BackgroundTransparency = 0}); callback() end)
+        card.MouseEnter:Connect(function() CreateTween(card, 0.15, {BackgroundColor3 = windowSelf.Theme.CardHover}) end)
+        card.MouseLeave:Connect(function() CreateTween(card, 0.15, {BackgroundColor3 = windowSelf.Theme.CardBg}) end)
+        btn.MouseButton1Click:Connect(callback)
     end
 
     function elements:CreateToggle(toggleText, default, flag, callback)
         callback = callback or function() end
         local state = default or false
-        
         if flag and windowSelf.SavedFlags[flag] ~= nil then state = windowSelf.SavedFlags[flag] end
         if flag then windowSelf.Flags[flag] = state end
 
-        local toggleFrame = CreateCardFrame()
-        toggleFrame.Size = UDim2.new(1, 0, 0, 36)
-        toggleFrame.Parent = pageFrame
+        local card = CreateCard()
+        card.Size = UDim2.new(1, 0, 0, 34)
+        card.Parent = pageFrame
 
-        local label = Instance.new("TextLabel")
-        label.Size = UDim2.new(0.7, 0, 1, 0)
-        label.Position = UDim2.new(0, 12, 0, 0)
-        label.BackgroundTransparency = 1
-        label.Text = toggleText
-        label.TextColor3 = windowSelf.Theme.TextColor
-        label.Font = windowSelf.Theme.Font
-        label.TextSize = 13
-        label.TextXAlignment = Enum.TextXAlignment.Left
-        label.Parent = toggleFrame
+        local lbl = Instance.new("TextLabel")
+        lbl.Size = UDim2.new(0.7, 0, 1, 0)
+        lbl.Position = UDim2.new(0, 12, 0, 0)
+        lbl.BackgroundTransparency = 1
+        lbl.Text = toggleText
+        lbl.TextColor3 = windowSelf.Theme.TextColor
+        lbl.Font = windowSelf.Theme.Font
+        lbl.TextSize = 12
+        lbl.TextXAlignment = Enum.TextXAlignment.Left
+        lbl.Parent = card
 
+        -- Toggle Switch Premium (Estilo Pill Slim)
         local switch = Instance.new("TextButton")
-        switch.Size = UDim2.new(0, 36, 0, 18)
-        switch.Position = UDim2.new(1, -48, 0.5, -9)
-        switch.BackgroundColor3 = state and windowSelf.Theme.Accent or Color3.fromRGB(50, 50, 50)
+        switch.Size = UDim2.new(0, 32, 0, 16)
+        switch.Position = UDim2.new(1, -44, 0.5, -8)
+        switch.BackgroundColor3 = state and windowSelf.Theme.Accent or Color3.fromRGB(45, 45, 45)
         switch.Text = ""
-        switch.Parent = toggleFrame
+        switch.Parent = card
+        local sc = Instance.new("UICorner") sc.CornerRadius = UDim.new(1, 0) sc.Parent = switch
+        local ss = Instance.new("UIStroke") ss.Color = windowSelf.Theme.Stroke ss.Parent = switch
 
-        local swCorner = Instance.new("UICorner")
-        swCorner.CornerRadius = UDim.new(1, 0)
-        swCorner.Parent = switch
-
-        local swStroke = Instance.new("UIStroke")
-        swStroke.Color = windowSelf.Theme.Stroke
-        swStroke.Thickness = 1
-        swStroke.Parent = switch
-
-        local sliderCircle = Instance.new("Frame")
-        sliderCircle.Size = UDim2.new(0, 12, 0, 12)
-        sliderCircle.Position = state and UDim2.new(1, -15, 0.5, -6) or UDim2.new(0, 3, 0.5, -6)
-        sliderCircle.BackgroundColor3 = windowSelf.Theme.TextColor
-        sliderCircle.Parent = switch
-
-        local scCorner = Instance.new("UICorner")
-        scCorner.CornerRadius = UDim.new(1, 0)
-        scCorner.Parent = sliderCircle
-
-        local function updateToggleVisual()
-            if state then
-                CreateTween(switch, 0.2, {BackgroundColor3 = windowSelf.Theme.Accent})
-                CreateTween(sliderCircle, 0.2, {Position = UDim2.new(1, -15, 0.5, -6)})
-            else
-                CreateTween(switch, 0.2, {BackgroundColor3 = Color3.fromRGB(50, 50, 50)})
-                CreateTween(sliderCircle, 0.2, {Position = UDim2.new(0, 3, 0.5, -6)})
-            end
-        end
+        local circle = Instance.new("Frame")
+        circle.Size = UDim2.new(0, 10, 0, 10)
+        circle.Position = state and UDim2.new(1, -13, 0.5, -5) or UDim2.new(0, 3, 0.5, -5)
+        circle.BackgroundColor3 = windowSelf.Theme.TextColor
+        circle.Parent = switch
+        local cc = Instance.new("UICorner") cc.CornerRadius = UDim.new(1, 0) cc.Parent = circle
 
         switch.MouseButton1Click:Connect(function()
             state = not state
-            updateToggleVisual()
-            if flag then windowSelf.Flags[flag] = state; windowSelf:SaveConfig() end
+            if state then
+                CreateTween(switch, 0.15, {BackgroundColor3 = windowSelf.Theme.Accent})
+                CreateTween(circle, 0.15, {Position = UDim2.new(1, -13, 0.5, -5)})
+            else
+                CreateTween(switch, 0.15, {BackgroundColor3 = Color3.fromRGB(45, 45, 45)})
+                CreateTween(circle, 0.15, {Position = UDim2.new(0, 3, 0.5, -5)})
+            end
+            if flag then windowSelf.Flags[flag] = state windowSelf:SaveConfig() end
             callback(state)
         end)
-        
         if flag and windowSelf.SavedFlags[flag] ~= nil then task.spawn(callback, state) end
     end
 
     function elements:CreateSlider(sliderText, min, max, default, isDecimal, flag, callback)
         callback = callback or function() end
         local value = default or min
-        
         if flag and windowSelf.SavedFlags[flag] ~= nil then value = windowSelf.SavedFlags[flag] end
         if flag then windowSelf.Flags[flag] = value end
 
-        local sliderFrame = CreateCardFrame()
-        sliderFrame.Size = UDim2.new(1, 0, 0, 46)
-        sliderFrame.Parent = pageFrame
+        local card = CreateCard()
+        card.Size = UDim2.new(1, 0, 0, 44)
+        card.Parent = pageFrame
 
-        local label = Instance.new("TextLabel")
-        label.Size = UDim2.new(0.6, 0, 0, 24)
-        label.Position = UDim2.new(0, 12, 0, 2)
-        label.BackgroundTransparency = 1
-        label.Text = sliderText
-        label.TextColor3 = windowSelf.Theme.TextColor
-        label.Font = windowSelf.Theme.Font
-        label.TextSize = 13
-        label.TextXAlignment = Enum.TextXAlignment.Left
-        label.Parent = sliderFrame
+        local lbl = Instance.new("TextLabel")
+        lbl.Size = UDim2.new(0.6, 0, 0, 22)
+        lbl.Position = UDim2.new(0, 12, 0, 2)
+        lbl.BackgroundTransparency = 1
+        lbl.Text = sliderText
+        lbl.TextColor3 = windowSelf.Theme.TextColor
+        lbl.Font = windowSelf.Theme.Font
+        lbl.TextSize = 12
+        lbl.TextXAlignment = Enum.TextXAlignment.Left
+        lbl.Parent = card
 
-        local valLabel = Instance.new("TextLabel")
-        valLabel.Size = UDim2.new(0.3, 0, 0, 24)
+        local valLbl = Instance.new("TextLabel")
+        valLbl.Size = UDim2.new(0.3, 0, 0, 22)
         valLabel.Position = UDim2.new(1, -112, 0, 2)
-        valLabel.BackgroundTransparency = 1
-        valLabel.Text = tostring(value)
-        valLabel.TextColor3 = windowSelf.Theme.Accent
-        valLabel.Font = windowSelf.Theme.Font
-        valLabel.TextSize = 13
-        valLabel.TextXAlignment = Enum.TextXAlignment.Right
-        valLabel.Parent = sliderFrame
+        valLbl.BackgroundTransparency = 1
+        valLbl.Text = tostring(value)
+        valLbl.TextColor3 = windowSelf.Theme.Accent
+        valLbl.Font = windowSelf.Theme.Font
+        valLbl.TextSize = 12
+        valLbl.TextXAlignment = Enum.TextXAlignment.Right
+        valLbl.Parent = card
 
-        local trackContainer = Instance.new("Frame")
-        trackContainer.Size = UDim2.new(1, -24, 0, 4)
-        trackContainer.Position = UDim2.new(0, 12, 0, 32)
-        trackContainer.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
-        trackContainer.Parent = sliderFrame
-
-        local trCorner = Instance.new("UICorner")
-        trCorner.CornerRadius = UDim.new(1, 0)
-        trCorner.Parent = trackContainer
+        -- Linha ultra fina idêntica à da WindUI
+        local track = Instance.new("Frame")
+        track.Size = UDim2.new(1, -24, 0, 3)
+        track.Position = UDim2.new(0, 12, 0, 30)
+        track.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+        track.Parent = card
+        local tc = Instance.new("UICorner") tc.CornerRadius = UDim.new(1,0) tc.Parent = track
 
         local fill = Instance.new("Frame")
         fill.Size = UDim2.new((value - min) / (max - min), 0, 1, 0)
         fill.BackgroundColor3 = windowSelf.Theme.Accent
         fill.BorderSizePixel = 0
-        fill.Parent = trackContainer
+        fill.Parent = track
 
-        local fillCorner = Instance.new("UICorner")
-        fillCorner.CornerRadius = UDim.new(1, 0)
-        fillCorner.Parent = fill
+        local thumb = Instance.new("Frame")
+        thumb.Size = UDim2.new(0, 10, 0, 10)
+        thumb.Position = UDim2.new((value - min) / (max - min), -5, 0.5, -5)
+        thumb.BackgroundColor3 = windowSelf.Theme.TextColor
+        thumb.Parent = track
+        local tbc = Instance.new("UICorner") tbc.CornerRadius = UDim.new(1,0) tbc.Parent = thumb
 
-        local snap = Instance.new("Frame")
-        snap.Size = UDim2.new(0, 12, 0, 12)
-        snap.Position = UDim2.new((value - min) / (max - min), -6, 0.5, -6)
-        snap.BackgroundColor3 = windowSelf.Theme.TextColor
-        snap.Parent = trackContainer
-
-        local snCorner = Instance.new("UICorner")
-        snCorner.CornerRadius = UDim.new(1, 0)
-        snCorner.Parent = snap
-
-        local snapStroke = Instance.new("UIStroke")
-        snapStroke.Color = windowSelf.Theme.Stroke
-        snapStroke.Thickness = 1
-        snapStroke.Parent = snap
-
-        local trackBtn = Instance.new("TextButton")
-        trackBtn.Size = UDim2.new(1, 0, 1, 0)
-        trackBtn.BackgroundTransparency = 1
-        trackBtn.Text = ""
-        trackBtn.Parent = trackContainer
+        local trigger = Instance.new("TextButton")
+        trigger.Size = UDim2.new(1, 0, 3, 0)
+        trigger.Position = UDim2.new(0, 0, -1, 0)
+        trigger.BackgroundTransparency = 1
+        trigger.Text = ""
+        trigger.Parent = track
 
         local sliding = false
-
-        local function updateFromPosition(inputPosition)
-            local percent = math.clamp((inputPosition.X - trackContainer.AbsolutePosition.X) / trackContainer.AbsoluteSize.X, 0, 1)
-            local rawValue = min + ((max - min) * percent)
-            if isDecimal then value = math.round(rawValue * 10) / 10 else value = math.floor(rawValue) end
-            
-            valLabel.Text = tostring(value)
-            CreateTween(fill, 0.08, {Size = UDim2.new(percent, 0, 1, 0)})
-            CreateTween(snap, 0.08, {Position = UDim2.new(percent, -6, 0.5, -6)})
-            
-            if flag then windowSelf.Flags[flag] = value; windowSelf:SaveConfig() end
+        local function update(inputPos)
+            local pct = math.clamp((inputPos.X - track.AbsolutePosition.X) / track.AbsoluteSize.X, 0, 1)
+            local raw = min + ((max - min) * pct)
+            value = isDecimal and math.round(raw * 10) / 10 or math.floor(raw)
+            valLbl.Text = tostring(value)
+            CreateTween(fill, 0.05, {Size = UDim2.new(pct, 0, 1, 0)})
+            CreateTween(thumb, 0.05, {Position = UDim2.new(pct, -5, 0.5, -5)})
+            if flag then windowSelf.Flags[flag] = value windowSelf:SaveConfig() end
             callback(value)
         end
 
-        trackBtn.InputBegan:Connect(function(input)
-            if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-                sliding = true
-                pageFrame.ScrollingEnabled = false
-                updateFromPosition(input.Position)
+        trigger.InputBegan:Connect(function(i)
+            if i.UserInputType == Enum.UserInputType.MouseButton1 or i.UserInputType == Enum.UserInputType.Touch then
+                sliding = true pageFrame.ScrollingEnabled = false update(i.Position)
             end
         end)
-
-        trackBtn.InputChanged:Connect(function(input)
-            if sliding and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
-                updateFromPosition(input.Position)
+        trigger.InputChanged:Connect(function(i)
+            if sliding and (i.UserInputType == Enum.UserInputType.MouseMovement or i.UserInputType == Enum.UserInputType.Touch) then
+                update(i.Position)
             end
         end)
-
-        local endConn
-        endConn = UserInputService.InputEnded:Connect(function(input)
-            if sliding and (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) then
-                sliding = false
-                pageFrame.ScrollingEnabled = true
+        UserInputService.InputEnded:Connect(function(i)
+            if sliding and (i.UserInputType == Enum.UserInputType.MouseButton1 or i.UserInputType == Enum.UserInputType.Touch) then
+                sliding = false pageFrame.ScrollingEnabled = true
             end
-        end)
-        trackContainer.Destroying:Connect(function() 
-            if endConn then endConn:Disconnect() end
-            pageFrame.ScrollingEnabled = true 
         end)
         
         if flag and windowSelf.SavedFlags[flag] ~= nil then task.spawn(callback, value) end
@@ -687,116 +592,92 @@ function Muzysh:CreatePage(pageName, icon)
 
     function elements:CreateDropdown(dropText, list, flag, callback)
         callback = callback or function() end
-        local isOpened = false
+        local open = false
         local selected = list[1] or ""
-        
         if flag and windowSelf.SavedFlags[flag] ~= nil then selected = windowSelf.SavedFlags[flag] end
         if flag then windowSelf.Flags[flag] = selected end
 
-        local dropFrame = CreateCardFrame()
-        dropFrame.Size = UDim2.new(1, 0, 0, 36)
-        dropFrame.ClipsDescendants = true
-        dropFrame.Parent = pageFrame
+        local card = CreateCard()
+        card.Size = UDim2.new(1, 0, 0, 34)
+        card.ClipsDescendants = true
+        card.Parent = pageFrame
 
-        local mainBtn = Instance.new("TextButton")
-        mainBtn.Size = UDim2.new(1, 0, 0, 36)
-        mainBtn.BackgroundTransparency = 1
-        mainBtn.Text = "  " .. dropText .. (selected ~= "" and " (" .. selected .. ")" or "")
-        mainBtn.TextColor3 = windowSelf.Theme.TextColor
-        mainBtn.Font = windowSelf.Theme.Font
-        mainBtn.TextSize = 13
-        mainBtn.TextXAlignment = Enum.TextXAlignment.Left
-        mainBtn.Parent = dropFrame
+        local btn = Instance.new("TextButton")
+        btn.Size = UDim2.new(1, 0, 0, 34)
+        btn.BackgroundTransparency = 1
+        btn.Text = "  " .. dropText .. (selected ~= "" and " (" .. selected .. ")" or "")
+        btn.TextColor3 = windowSelf.Theme.TextColor
+        btn.Font = windowSelf.Theme.Font
+        btn.TextSize = 12
+        btn.TextXAlignment = Enum.TextXAlignment.Left
+        btn.Parent = card
 
-        local arrow = Instance.new("TextLabel")
-        arrow.Size = UDim2.new(0, 36, 0, 36)
-        arrow.Position = UDim2.new(1, -36, 0, 0)
+        local arrow = Instance.new("ImageLabel")
+        arrow.Size = UDim2.new(0, 12, 0, 12)
+        arrow.Position = UDim2.new(1, -24, 0.5, -6)
         arrow.BackgroundTransparency = 1
-        arrow.Text = "▼"
-        arrow.TextColor3 = windowSelf.Theme.TextMuted
-        arrow.Font = windowSelf.Theme.Font
-        arrow.TextSize = 9
-        arrow.Parent = mainBtn
+        arrow.Image = "rbxassetid://11422142913" -- Seta limpa e minimalista
+        arrow.ImageColor3 = windowSelf.Theme.TextMuted
+        arrow.Parent = btn
 
-        local listHolder = Instance.new("ScrollingFrame")
-        listHolder.Size = UDim2.new(1, -16, 1, -40)
-        listHolder.Position = UDim2.new(0, 8, 0, 38)
-        listHolder.BackgroundTransparency = 1
-        listHolder.ScrollBarThickness = 2
-        listHolder.ScrollBarImageColor3 = windowSelf.Theme.Stroke
-        listHolder.CanvasSize = UDim2.new(0, 0, 0, 0)
-        listHolder.Parent = dropFrame
-
-        local listLayout = Instance.new("UIListLayout")
-        listLayout.Padding = UDim.new(0, 3)
-        listLayout.Parent = listHolder
-
-        listLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-            listHolder.CanvasSize = UDim2.new(0, 0, 0, listLayout.AbsoluteContentSize.Y)
-        end)
+        local holder = Instance.new("ScrollingFrame")
+        holder.Size = UDim2.new(1, -16, 1, -38)
+        holder.Position = UDim2.new(0, 8, 0, 36)
+        holder.BackgroundTransparency = 1
+        holder.ScrollBarThickness = 0
+        holder.Parent = card
+        local hl = Instance.new("UIListLayout") hl.Padding = UDim.new(0, 2) hl.Parent = holder
 
         for _, opt in ipairs(list) do
-            local optBtn = Instance.new("TextButton")
-            optBtn.Size = UDim2.new(1, 0, 0, 26)
-            optBtn.BackgroundColor3 = Color3.fromRGB(46, 46, 46)
-            optBtn.Text = "  " .. opt
-            optBtn.TextColor3 = windowSelf.Theme.TextMuted
-            optBtn.Font = windowSelf.Theme.Font
-            optBtn.TextSize = 12
-            optBtn.TextXAlignment = Enum.TextXAlignment.Left
-            optBtn.Parent = listHolder
+            local oBtn = Instance.new("TextButton")
+            oBtn.Size = UDim2.new(1, 0, 0, 24)
+            oBtn.BackgroundColor3 = Color3.fromRGB(36, 36, 36)
+            oBtn.Text = "  " .. opt
+            oBtn.TextColor3 = windowSelf.Theme.TextMuted
+            oBtn.Font = windowSelf.Theme.Font
+            oBtn.TextSize = 11
+            oBtn.TextXAlignment = Enum.TextXAlignment.Left
+            oBtn.Parent = holder
+            local oc = Instance.new("UICorner") oc.CornerRadius = UDim.new(0, 4) oc.Parent = oBtn
 
-            local obc = Instance.new("UICorner")
-            obc.CornerRadius = UDim.new(0, 4)
-            obc.Parent = optBtn
-
-            optBtn.MouseEnter:Connect(function() CreateTween(optBtn, 0.1, {TextColor3 = windowSelf.Theme.TextColor, BackgroundColor3 = Color3.fromRGB(55, 55, 55)}) end)
-            optBtn.MouseLeave:Connect(function() CreateTween(optBtn, 0.1, {TextColor3 = windowSelf.Theme.TextMuted, BackgroundColor3 = Color3.fromRGB(46, 46, 46)}) end)
-
-            optBtn.MouseButton1Click:Connect(function()
+            oBtn.MouseButton1Click:Connect(function()
                 selected = opt
-                mainBtn.Text = "  " .. dropText .. " (" .. opt .. ")"
-                isOpened = false
-                CreateTween(dropFrame, 0.2, {Size = UDim2.new(1, 0, 0, 36)})
-                CreateTween(arrow, 0.2, {Rotation = 0})
-                SetZIndex(dropFrame, 1) -- Retorna a camada ao fechar
-                
-                if flag then windowSelf.Flags[flag] = selected; windowSelf:SaveConfig() end
+                btn.Text = "  " .. dropText .. " (" .. opt .. ")"
+                open = false
+                card.ZIndex = 1
+                CreateTween(card, 0.15, {Size = UDim2.new(1, 0, 0, 34)})
+                CreateTween(arrow, 0.15, {Rotation = 0})
+                if flag then windowSelf.Flags[flag] = selected windowSelf:SaveConfig() end
                 callback(opt)
             end)
         end
 
-        mainBtn.MouseButton1Click:Connect(function()
-            isOpened = not isOpened
-            if isOpened then
-                SetZIndex(dropFrame, 5) -- Traz o Dropdown para frente para não bugar atrás de outros botões
-                local contentHeight = 40 + (#list * 29)
-                local finalHeight = math.clamp(contentHeight, 36, 130)
-                CreateTween(dropFrame, 0.2, {Size = UDim2.new(1, 0, 0, finalHeight)})
-                CreateTween(arrow, 0.2, {Rotation = 180})
+        btn.MouseButton1Click:Connect(function()
+            open = not open
+            if open then
+                card.ZIndex = 10 -- Evita sobreposição errada
+                local targetH = math.clamp(38 + (#list * 26), 34, 130)
+                CreateTween(card, 0.15, {Size = UDim2.new(1, 0, 0, targetH)})
+                CreateTween(arrow, 0.15, {Rotation = 180})
             else
-                CreateTween(dropFrame, 0.2, {Size = UDim2.new(1, 0, 0, 36)}).Completed:Connect(function()
-                    if not isOpened then SetZIndex(dropFrame, 1) end
-                end)
-                CreateTween(arrow, 0.2, {Rotation = 0})
+                card.ZIndex = 1
+                CreateTween(card, 0.15, {Size = UDim2.new(1, 0, 0, 34)})
+                CreateTween(arrow, 0.15, {Rotation = 0})
             end
         end)
-        
         if flag and windowSelf.SavedFlags[flag] ~= nil then task.spawn(callback, selected) end
     end
 
     function elements:CreateTextBox(placeholder, flag, callback)
         callback = callback or function() end
         local currentText = ""
-        
         if flag and windowSelf.SavedFlags[flag] ~= nil then currentText = windowSelf.SavedFlags[flag] end
         if flag then windowSelf.Flags[flag] = currentText end
 
-        local boxFrame = CreateCardFrame()
-        boxFrame.Size = UDim2.new(1, 0, 0, 36)
-        boxFrame.Parent = pageFrame
-
-        local stroke = boxFrame:FindFirstChildOfClass("UIStroke")
+        local card = CreateCard()
+        card.Size = UDim2.new(1, 0, 0, 34)
+        card.Parent = pageFrame
+        local stroke = card:FindFirstChildOfClass("UIStroke")
 
         local box = Instance.new("TextBox")
         box.Size = UDim2.new(1, -24, 1, 0)
@@ -807,21 +688,18 @@ function Muzysh:CreatePage(pageName, icon)
         box.Text = currentText
         box.TextColor3 = windowSelf.Theme.TextColor
         box.Font = windowSelf.Theme.Font
-        box.TextSize = 13
+        box.TextSize = 12
         box.TextXAlignment = Enum.TextXAlignment.Left
-        box.Parent = boxFrame
+        box.Parent = card
 
-        box.Focused:Connect(function() if stroke then CreateTween(stroke, 0.15, {Color = windowSelf.Theme.Accent}) end end)
-        box.FocusLost:Connect(function(enterPressed)
-            if stroke then CreateTween(stroke, 0.15, {Color = windowSelf.Theme.Stroke}) end
+        box.Focused:Connect(function() if stroke then CreateTween(stroke, 0.1, {Color = windowSelf.Theme.Accent}) end end)
+        box.FocusLost:Connect(function(ep)
+            if stroke then CreateTween(stroke, 0.1, {Color = windowSelf.Theme.Stroke}) end
             currentText = box.Text
-            if flag then windowSelf.Flags[flag] = currentText; windowSelf:SaveConfig() end
-            callback(currentText, enterPressed)
+            if flag then windowSelf.Flags[flag] = currentText windowSelf:SaveConfig() end
+            callback(currentText, ep)
         end)
-        
-        if flag and windowSelf.SavedFlags[flag] ~= nil and currentText ~= "" then
-            task.spawn(callback, currentText, false)
-        end
+        if flag and windowSelf.SavedFlags[flag] ~= nil and currentText ~= "" then task.spawn(callback, currentText, false) end
     end
 
     return elements
