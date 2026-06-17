@@ -10,19 +10,19 @@ local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
 
--- Paleta baseada estritamente no Fluent Design do Windows 11
+-- Paleta Ajustada (Mais contraste, visual mais limpo)
 local DefaultTheme = {
-    Background = Color3.fromRGB(26, 26, 26),
-    TopBar = Color3.fromRGB(32, 32, 32),
-    Sidebar = Color3.fromRGB(30, 30, 30),
-    Accent = Color3.fromRGB(215, 35, 35), -- Muzysh Red
+    Background = Color3.fromRGB(24, 24, 24),
+    TopBar = Color3.fromRGB(30, 30, 30),
+    Sidebar = Color3.fromRGB(28, 28, 28),
+    Accent = Color3.fromRGB(215, 35, 35),
     AccentHover = Color3.fromRGB(245, 55, 55),
     CardBg = Color3.fromRGB(38, 38, 38),
-    CardHover = Color3.fromRGB(45, 45, 45),
-    TextColor = Color3.fromRGB(253, 253, 253),
-    TextMuted = Color3.fromRGB(155, 155, 155),
-    Stroke = Color3.fromRGB(55, 55, 55),
-    CornerRadius = UDim.new(0, 8), -- Cantos levemente mais agudos e modernos
+    CardHover = Color3.fromRGB(44, 44, 44),
+    TextColor = Color3.fromRGB(255, 255, 255),
+    TextMuted = Color3.fromRGB(160, 160, 160),
+    Stroke = Color3.fromRGB(60, 60, 60),
+    CornerRadius = UDim.new(0, 6),
     Font = Enum.Font.GothamMedium,
     FontBold = Enum.Font.GothamBold
 }
@@ -105,7 +105,6 @@ function Muzysh:DestroyWindow()
     table.clear(self._connections)
 
     if self._mainTween then self._mainTween:Cancel() end
-
     self._mainTween = CreateTween(self.MainFrame, 0.3, { Size = UDim2.new(0, 0, 0, 0), BackgroundTransparency = 1 }, Enum.EasingStyle.Quart)
 
     if self.FloatingBtn then self.FloatingBtn:Destroy() end
@@ -144,10 +143,9 @@ function Muzysh:CreateFloatingButton()
 
     local floater = Instance.new("ImageButton")
     floater.Name = "MinimizeFloater"
-    floater.Size = UDim2.new(0, 50, 0, 50)
-    floater.Position = UDim2.new(1, -65, 1, -65)
-    floater.BackgroundColor3 = self.Theme.TopBar
-    floater.BackgroundTransparency = 0.2
+    floater.Size = UDim2.new(0, 48, 0, 48)
+    floater.Position = UDim2.new(1, -60, 1, -60)
+    floater.BackgroundColor3 = self.Theme.CardBg
     floater.Image = "rbxassetid://72939763737478"
     floater.ScaleType = Enum.ScaleType.Fit
     floater.Parent = self.ScreenGui
@@ -161,8 +159,6 @@ function Muzysh:CreateFloatingButton()
     floaterStroke.Thickness = 1
     floaterStroke.Parent = floater
 
-    floater.MouseEnter:Connect(function() CreateTween(floater, 0.2, {BackgroundTransparency = 0}) end)
-    floater.MouseLeave:Connect(function() CreateTween(floater, 0.2, {BackgroundTransparency = 0.2}) end)
     MakeDraggable(floater, floater)
     floater.MouseButton1Click:Connect(function() self:RestoreWindow() end)
 
@@ -190,7 +186,7 @@ function Muzysh.Init(title, configName, customTheme)
     end
 
     self.ScreenGui = Instance.new("ScreenGui")
-    self.ScreenGui.Name = "Muzysh_Fluent"
+    self.ScreenGui.Name = "Muzysh_Fluent_Fixed"
     self.ScreenGui.ResetOnSpawn = false
     self.ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 
@@ -254,7 +250,6 @@ function Muzysh.Init(title, configName, customTheme)
     topCorner.CornerRadius = self.Theme.CornerRadius
     topCorner.Parent = self.TopBar
 
-    -- Linha sutil de divisão inferior na TopBar estilo Wind UI
     local topDivider = Instance.new("Frame")
     topDivider.Size = UDim2.new(1, 0, 0, 1)
     topDivider.Position = UDim2.new(0, 0, 1, -1)
@@ -342,22 +337,15 @@ end
 -- ======================== CRIAÇÃO DE PÁGINAS E COMPONENTES ========================
 
 function Muzysh:CreatePage(pageName, icon)
-    -- Mudado para CanvasGroup para permitir efeito suave de Fade-In/Out
-    local pageGroup = Instance.new("CanvasGroup")
-    pageGroup.Name = pageName .. "_PageGroup"
-    pageGroup.Size = UDim2.new(1, 0, 1, 0)
-    pageGroup.BackgroundTransparency = 1
-    pageGroup.GroupTransparency = 1
-    pageGroup.Visible = false
-    pageGroup.Parent = self.PageContainer
-
+    -- Trocado CanvasGroup por Frame Padrão para evitar bugs de resolução
     local pageFrame = Instance.new("ScrollingFrame")
     pageFrame.Size = UDim2.new(1, 0, 1, 0)
     pageFrame.BackgroundTransparency = 1
-    pageFrame.ScrollBarThickness = 3
+    pageFrame.ScrollBarThickness = 2
     pageFrame.ScrollBarImageColor3 = self.Theme.Stroke
     pageFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
-    pageFrame.Parent = pageGroup
+    pageFrame.Visible = false
+    pageFrame.Parent = self.PageContainer
 
     local pageLayout = Instance.new("UIListLayout")
     pageLayout.Padding = UDim.new(0, 6)
@@ -365,7 +353,7 @@ function Muzysh:CreatePage(pageName, icon)
     pageLayout.Parent = pageFrame
 
     pageLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-        pageFrame.CanvasSize = UDim2.new(0, 0, 0, pageLayout.AbsoluteContentSize.Y + 10)
+        pageFrame.CanvasSize = UDim2.new(0, 0, 0, pageLayout.AbsoluteContentSize.Y + 15)
     end)
 
     local pagePadding = Instance.new("UIPadding")
@@ -399,7 +387,6 @@ function Muzysh:CreatePage(pageName, icon)
     tabCorner.CornerRadius = UDim.new(0, 5)
     tabCorner.Parent = tabBtn
 
-    -- Indicador vertical Fluent móvel
     local indicator = Instance.new("Frame")
     indicator.Size = UDim2.new(0, 3, 0, 0)
     indicator.Position = UDim2.new(0, 2, 0.5, 0)
@@ -408,24 +395,21 @@ function Muzysh:CreatePage(pageName, icon)
     indicator.Parent = tabBtn
 
     local function SelectPage()
-        for _, p in pairs(self.Pages) do 
-            if p.Visible then
-                CreateTween(p, 0.15, {GroupTransparency = 1}).Completed:Connect(function()
-                    p.Visible = false
-                end)
-            end
-        end
+        for _, p in pairs(self.Pages) do p.Visible = false end
         for t, ind in pairs(self.Tabs) do
             CreateTween(t, 0.2, {TextColor3 = self.Theme.TextMuted, BackgroundTransparency = 1})
-            local img = t:FindFirstChild("ImageLabel") or t:FindFirstChildWhichIsA("ImageLabel")
+            local img = t:FindFirstChildWhichIsA("ImageLabel")
             if img then CreateTween(img, 0.2, {ImageColor3 = self.Theme.TextMuted}) end
             CreateTween(ind, 0.2, {Size = UDim2.new(0, 3, 0, 0), Position = UDim2.new(0, 2, 0.5, 0)})
         end
         
-        pageGroup.Visible = true
-        CreateTween(pageGroup, 0.25, {GroupTransparency = 0})
+        -- Nova animação: Slide Up limpo
+        pageFrame.Visible = true
+        pageFrame.Position = UDim2.new(0, 0, 0, 15)
+        CreateTween(pageFrame, 0.35, {Position = UDim2.new(0, 0, 0, 0)}, Enum.EasingStyle.Quint)
+        
         CreateTween(tabBtn, 0.2, {TextColor3 = self.Theme.TextColor, BackgroundTransparency = 0.94})
-        local activeImg = tabBtn:FindFirstChild("ImageLabel") or tabBtn:FindFirstChildWhichIsA("ImageLabel")
+        local activeImg = tabBtn:FindFirstChildWhichIsA("ImageLabel")
         if activeImg then CreateTween(activeImg, 0.2, {ImageColor3 = self.Theme.TextColor}) end
         CreateTween(indicator, 0.25, {Size = UDim2.new(0, 3, 0, 16), Position = UDim2.new(0, 2, 0.5, -8)})
     end
@@ -433,17 +417,13 @@ function Muzysh:CreatePage(pageName, icon)
     tabBtn.MouseButton1Click:Connect(SelectPage)
     
     tabBtn.MouseEnter:Connect(function()
-        if not pageGroup.Visible then
-            CreateTween(tabBtn, 0.15, {BackgroundTransparency = 0.97})
-        end
+        if not pageFrame.Visible then CreateTween(tabBtn, 0.15, {BackgroundTransparency = 0.97}) end
     end)
     tabBtn.MouseLeave:Connect(function()
-        if not pageGroup.Visible then
-            CreateTween(tabBtn, 0.15, {BackgroundTransparency = 1})
-        end
+        if not pageFrame.Visible then CreateTween(tabBtn, 0.15, {BackgroundTransparency = 1}) end
     end)
 
-    table.insert(self.Pages, pageGroup)
+    table.insert(self.Pages, pageFrame)
     self.Tabs[tabBtn] = indicator
 
     if not self.FirstPage then
@@ -454,10 +434,10 @@ function Muzysh:CreatePage(pageName, icon)
     local elements = {}
     local windowSelf = self
 
-    -- Helper de design para padronizar estruturas Fluent (Cards com bordas finas)
     local function CreateCardFrame()
         local card = Instance.new("Frame")
         card.BackgroundColor3 = windowSelf.Theme.CardBg
+        card.ZIndex = 1
         
         local cc = Instance.new("UICorner")
         cc.CornerRadius = UDim.new(0, 6)
@@ -466,15 +446,22 @@ function Muzysh:CreatePage(pageName, icon)
         local cs = Instance.new("UIStroke")
         cs.Color = windowSelf.Theme.Stroke
         cs.Thickness = 1
-        cs.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
         cs.Parent = card
 
         return card
     end
 
+    -- Helper para corrigir bugs de camadas ZIndex
+    local function SetZIndex(instance, index)
+        instance.ZIndex = index
+        for _, v in pairs(instance:GetDescendants()) do
+            if v:IsA("GuiObject") then v.ZIndex = index end
+        end
+    end
+
     function elements:CreateSection(titleText)
         local sectionFrame = Instance.new("Frame")
-        sectionFrame.Size = UDim2.new(1, 0, 0, 32)
+        sectionFrame.Size = UDim2.new(1, 0, 0, 28)
         sectionFrame.BackgroundTransparency = 1
         sectionFrame.Parent = pageFrame
 
@@ -493,7 +480,7 @@ function Muzysh:CreatePage(pageName, icon)
     function elements:CreateButton(btnText, callback)
         callback = callback or function() end
         local btnFrame = CreateCardFrame()
-        btnFrame.Size = UDim2.new(1, 0, 0, 38)
+        btnFrame.Size = UDim2.new(1, 0, 0, 36)
         btnFrame.Parent = pageFrame
 
         local realBtn = Instance.new("TextButton")
@@ -508,13 +495,8 @@ function Muzysh:CreatePage(pageName, icon)
         btnFrame.MouseEnter:Connect(function() CreateTween(btnFrame, 0.15, {BackgroundColor3 = windowSelf.Theme.CardHover}) end)
         btnFrame.MouseLeave:Connect(function() CreateTween(btnFrame, 0.15, {BackgroundColor3 = windowSelf.Theme.CardBg}) end)
         
-        realBtn.MouseButton1Down:Connect(function()
-            CreateTween(btnFrame, 0.05, {BackgroundTransparency = 0.3})
-        end)
-        realBtn.MouseButton1Up:Connect(function()
-            CreateTween(btnFrame, 0.05, {BackgroundTransparency = 0})
-            callback()
-        end)
+        realBtn.MouseButton1Down:Connect(function() CreateTween(btnFrame, 0.05, {BackgroundTransparency = 0.3}) end)
+        realBtn.MouseButton1Up:Connect(function() CreateTween(btnFrame, 0.05, {BackgroundTransparency = 0}); callback() end)
     end
 
     function elements:CreateToggle(toggleText, default, flag, callback)
@@ -525,7 +507,7 @@ function Muzysh:CreatePage(pageName, icon)
         if flag then windowSelf.Flags[flag] = state end
 
         local toggleFrame = CreateCardFrame()
-        toggleFrame.Size = UDim2.new(1, 0, 0, 38)
+        toggleFrame.Size = UDim2.new(1, 0, 0, 36)
         toggleFrame.Parent = pageFrame
 
         local label = Instance.new("TextLabel")
@@ -540,8 +522,8 @@ function Muzysh:CreatePage(pageName, icon)
         label.Parent = toggleFrame
 
         local switch = Instance.new("TextButton")
-        switch.Size = UDim2.new(0, 38, 0, 20)
-        switch.Position = UDim2.new(1, -50, 0.5, -10)
+        switch.Size = UDim2.new(0, 36, 0, 18)
+        switch.Position = UDim2.new(1, -48, 0.5, -9)
         switch.BackgroundColor3 = state and windowSelf.Theme.Accent or Color3.fromRGB(50, 50, 50)
         switch.Text = ""
         switch.Parent = toggleFrame
@@ -556,8 +538,8 @@ function Muzysh:CreatePage(pageName, icon)
         swStroke.Parent = switch
 
         local sliderCircle = Instance.new("Frame")
-        sliderCircle.Size = UDim2.new(0, 14, 0, 14)
-        sliderCircle.Position = state and UDim2.new(1, -17, 0.5, -7) or UDim2.new(0, 3, 0.5, -7)
+        sliderCircle.Size = UDim2.new(0, 12, 0, 12)
+        sliderCircle.Position = state and UDim2.new(1, -15, 0.5, -6) or UDim2.new(0, 3, 0.5, -6)
         sliderCircle.BackgroundColor3 = windowSelf.Theme.TextColor
         sliderCircle.Parent = switch
 
@@ -568,20 +550,17 @@ function Muzysh:CreatePage(pageName, icon)
         local function updateToggleVisual()
             if state then
                 CreateTween(switch, 0.2, {BackgroundColor3 = windowSelf.Theme.Accent})
-                CreateTween(sliderCircle, 0.2, {Position = UDim2.new(1, -17, 0.5, -7)})
+                CreateTween(sliderCircle, 0.2, {Position = UDim2.new(1, -15, 0.5, -6)})
             else
                 CreateTween(switch, 0.2, {BackgroundColor3 = Color3.fromRGB(50, 50, 50)})
-                CreateTween(sliderCircle, 0.2, {Position = UDim2.new(0, 3, 0.5, -7)})
+                CreateTween(sliderCircle, 0.2, {Position = UDim2.new(0, 3, 0.5, -6)})
             end
         end
 
         switch.MouseButton1Click:Connect(function()
             state = not state
             updateToggleVisual()
-            if flag then
-                windowSelf.Flags[flag] = state
-                windowSelf:SaveConfig()
-            end
+            if flag then windowSelf.Flags[flag] = state; windowSelf:SaveConfig() end
             callback(state)
         end)
         
@@ -667,17 +646,13 @@ function Muzysh:CreatePage(pageName, icon)
         local function updateFromPosition(inputPosition)
             local percent = math.clamp((inputPosition.X - trackContainer.AbsolutePosition.X) / trackContainer.AbsoluteSize.X, 0, 1)
             local rawValue = min + ((max - min) * percent)
-            
             if isDecimal then value = math.round(rawValue * 10) / 10 else value = math.floor(rawValue) end
             
             valLabel.Text = tostring(value)
             CreateTween(fill, 0.08, {Size = UDim2.new(percent, 0, 1, 0)})
             CreateTween(snap, 0.08, {Position = UDim2.new(percent, -6, 0.5, -6)})
             
-            if flag then
-                windowSelf.Flags[flag] = value
-                windowSelf:SaveConfig()
-            end
+            if flag then windowSelf.Flags[flag] = value; windowSelf:SaveConfig() end
             callback(value)
         end
 
@@ -719,12 +694,12 @@ function Muzysh:CreatePage(pageName, icon)
         if flag then windowSelf.Flags[flag] = selected end
 
         local dropFrame = CreateCardFrame()
-        dropFrame.Size = UDim2.new(1, 0, 0, 38)
+        dropFrame.Size = UDim2.new(1, 0, 0, 36)
         dropFrame.ClipsDescendants = true
         dropFrame.Parent = pageFrame
 
         local mainBtn = Instance.new("TextButton")
-        mainBtn.Size = UDim2.new(1, 0, 0, 38)
+        mainBtn.Size = UDim2.new(1, 0, 0, 36)
         mainBtn.BackgroundTransparency = 1
         mainBtn.Text = "  " .. dropText .. (selected ~= "" and " (" .. selected .. ")" or "")
         mainBtn.TextColor3 = windowSelf.Theme.TextColor
@@ -734,18 +709,18 @@ function Muzysh:CreatePage(pageName, icon)
         mainBtn.Parent = dropFrame
 
         local arrow = Instance.new("TextLabel")
-        arrow.Size = UDim2.new(0, 38, 0, 38)
-        arrow.Position = UDim2.new(1, -38, 0, 0)
+        arrow.Size = UDim2.new(0, 36, 0, 36)
+        arrow.Position = UDim2.new(1, -36, 0, 0)
         arrow.BackgroundTransparency = 1
         arrow.Text = "▼"
         arrow.TextColor3 = windowSelf.Theme.TextMuted
         arrow.Font = windowSelf.Theme.Font
-        arrow.TextSize = 10
+        arrow.TextSize = 9
         arrow.Parent = mainBtn
 
         local listHolder = Instance.new("ScrollingFrame")
-        listHolder.Size = UDim2.new(1, -16, 1, -42)
-        listHolder.Position = UDim2.new(0, 8, 0, 40)
+        listHolder.Size = UDim2.new(1, -16, 1, -40)
+        listHolder.Position = UDim2.new(0, 8, 0, 38)
         listHolder.BackgroundTransparency = 1
         listHolder.ScrollBarThickness = 2
         listHolder.ScrollBarImageColor3 = windowSelf.Theme.Stroke
@@ -762,7 +737,7 @@ function Muzysh:CreatePage(pageName, icon)
 
         for _, opt in ipairs(list) do
             local optBtn = Instance.new("TextButton")
-            optBtn.Size = UDim2.new(1, 0, 0, 28)
+            optBtn.Size = UDim2.new(1, 0, 0, 26)
             optBtn.BackgroundColor3 = Color3.fromRGB(46, 46, 46)
             optBtn.Text = "  " .. opt
             optBtn.TextColor3 = windowSelf.Theme.TextMuted
@@ -782,13 +757,11 @@ function Muzysh:CreatePage(pageName, icon)
                 selected = opt
                 mainBtn.Text = "  " .. dropText .. " (" .. opt .. ")"
                 isOpened = false
-                CreateTween(dropFrame, 0.2, {Size = UDim2.new(1, 0, 0, 38)})
+                CreateTween(dropFrame, 0.2, {Size = UDim2.new(1, 0, 0, 36)})
                 CreateTween(arrow, 0.2, {Rotation = 0})
+                SetZIndex(dropFrame, 1) -- Retorna a camada ao fechar
                 
-                if flag then
-                    windowSelf.Flags[flag] = selected
-                    windowSelf:SaveConfig()
-                end
+                if flag then windowSelf.Flags[flag] = selected; windowSelf:SaveConfig() end
                 callback(opt)
             end)
         end
@@ -796,12 +769,15 @@ function Muzysh:CreatePage(pageName, icon)
         mainBtn.MouseButton1Click:Connect(function()
             isOpened = not isOpened
             if isOpened then
-                local contentHeight = 42 + (#list * 31)
-                local finalHeight = math.clamp(contentHeight, 38, 140)
+                SetZIndex(dropFrame, 5) -- Traz o Dropdown para frente para não bugar atrás de outros botões
+                local contentHeight = 40 + (#list * 29)
+                local finalHeight = math.clamp(contentHeight, 36, 130)
                 CreateTween(dropFrame, 0.2, {Size = UDim2.new(1, 0, 0, finalHeight)})
                 CreateTween(arrow, 0.2, {Rotation = 180})
             else
-                CreateTween(dropFrame, 0.2, {Size = UDim2.new(1, 0, 0, 38)})
+                CreateTween(dropFrame, 0.2, {Size = UDim2.new(1, 0, 0, 36)}).Completed:Connect(function()
+                    if not isOpened then SetZIndex(dropFrame, 1) end
+                end)
                 CreateTween(arrow, 0.2, {Rotation = 0})
             end
         end)
@@ -817,7 +793,7 @@ function Muzysh:CreatePage(pageName, icon)
         if flag then windowSelf.Flags[flag] = currentText end
 
         local boxFrame = CreateCardFrame()
-        boxFrame.Size = UDim2.new(1, 0, 0, 38)
+        boxFrame.Size = UDim2.new(1, 0, 0, 36)
         boxFrame.Parent = pageFrame
 
         local stroke = boxFrame:FindFirstChildOfClass("UIStroke")
@@ -839,10 +815,7 @@ function Muzysh:CreatePage(pageName, icon)
         box.FocusLost:Connect(function(enterPressed)
             if stroke then CreateTween(stroke, 0.15, {Color = windowSelf.Theme.Stroke}) end
             currentText = box.Text
-            if flag then
-                windowSelf.Flags[flag] = currentText
-                windowSelf:SaveConfig()
-            end
+            if flag then windowSelf.Flags[flag] = currentText; windowSelf:SaveConfig() end
             callback(currentText, enterPressed)
         end)
         
